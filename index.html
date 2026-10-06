@@ -1,0 +1,1128 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#EFF6F2" id="meta-theme-color">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Tabele">
+<link rel="manifest" href="./manifest.json">
+<link rel="apple-touch-icon" href="./apple-touch-icon.png">
+<title>Tabele</title>
+<style>
+:root{
+  --bg:#EFF6F2; --ink:#10261D; --ink-soft:#5C7A6C; --ink-faded:#9FB8AC;
+  --card-bg:#FFFFFF; --card-border:#D7E8DE; --head-bg:#DCEEE4;
+  --accent:#2E7D61; --accent-ink:#FFFFFF;
+  --footer-bg:#10261D; --footer-text:#EFF6F2;
+  --danger:#D9402F; --divider:#D7E8DE; --search-bg:#E2F0E8;
+  --sel:#2E7D6133;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0E1713; --ink:#E7F3EC; --ink-soft:#8FAC9D; --ink-faded:#4C6559;
+    --card-bg:#162620; --card-border:#24392F; --head-bg:#1C3228;
+    --accent:#4CAF86; --accent-ink:#06130D;
+    --footer-bg:#000000; --footer-text:#E7F3EC;
+    --danger:#E5776F; --divider:#24392F; --search-bg:#1C3228;
+    --sel:#4CAF8633;
+  }
+}
+*{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html,body{ height:100%; overflow:hidden; overscroll-behavior:none; width:100%; position:fixed; top:0; left:0; margin:0; padding:0; }
+body{
+  font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',sans-serif;
+  background:var(--bg); color:var(--ink); -webkit-font-smoothing:antialiased;
+  display:flex; flex-direction:column; padding-top:env(safe-area-inset-top,0px);
+}
+
+/* ---------- header ---------- */
+header{
+  padding:10px 14px 8px;
+  padding-left:calc(env(safe-area-inset-left,0px) + 14px);
+  padding-right:calc(env(safe-area-inset-right,0px) + 14px);
+  flex-shrink:0;
+}
+.h-sus{ display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; gap:8px; flex-wrap:wrap; }
+.h-titlu{ font-size:22px; font-weight:800; margin:0; }
+.h-butoane{ display:flex; gap:7px; }
+.icon-btn{
+  display:flex; align-items:center; justify-content:center; background:var(--card-bg); border:1px solid var(--card-border);
+  border-radius:50%; width:34px; height:34px; font-size:15px; flex-shrink:0; color:var(--ink);
+}
+.tabs-foi{ display:flex; gap:6px; overflow-x:auto; padding-bottom:2px; -webkit-overflow-scrolling:touch; }
+.tabs-foi::-webkit-scrollbar{ display:none; }
+.tab-foaie{
+  flex-shrink:0; padding:8px 14px; border-radius:18px; border:1px solid var(--card-border); background:var(--card-bg);
+  color:var(--ink-soft); font-family:inherit; font-size:13.5px; font-weight:600; white-space:nowrap;
+}
+.tab-foaie.on{ background:var(--accent); color:var(--accent-ink); border-color:var(--accent); }
+.tab-foaie-add{
+  flex-shrink:0; width:34px; height:34px; border-radius:50%; border:1px dashed var(--card-border); background:transparent;
+  color:var(--ink-soft); font-size:17px; display:flex; align-items:center; justify-content:center;
+}
+
+/* ---------- bara de formule ---------- */
+.formula-bar{
+  display:flex; align-items:center; gap:8px; padding:8px 14px;
+  padding-left:calc(env(safe-area-inset-left,0px) + 14px);
+  padding-right:calc(env(safe-area-inset-right,0px) + 14px);
+  border-top:1px solid var(--divider); border-bottom:1px solid var(--divider);
+  background:var(--card-bg); flex-shrink:0;
+}
+.fx-ref{
+  flex-shrink:0; min-width:40px; text-align:center; font-size:13px; font-weight:800; color:var(--accent);
+  background:var(--search-bg); border-radius:8px; padding:7px 6px;
+}
+.fx-input{
+  flex:1; min-width:0; border:none; outline:none; background:transparent; color:var(--ink);
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:15px; padding:6px 2px;
+}
+.fx-input::placeholder{ color:var(--ink-faded); font-family:inherit; }
+
+/* ---------- grila ---------- */
+#grid-wrap{ flex:1; min-height:0; overflow:auto; -webkit-overflow-scrolling:touch; background:var(--bg); }
+table.grid{ border-collapse:collapse; table-layout:fixed; }
+table.grid th, table.grid td{
+  border:1px solid var(--card-border); padding:0; height:34px;
+}
+th.col-head{
+  position:sticky; top:0; z-index:3; background:var(--head-bg); color:var(--ink-soft);
+  font-size:12px; font-weight:700; width:92px; min-width:92px;
+}
+th.corner{ position:sticky; top:0; left:0; z-index:4; background:var(--head-bg); width:40px; min-width:40px; }
+th.row-head{
+  position:sticky; left:0; z-index:2; background:var(--head-bg); color:var(--ink-soft);
+  font-size:12px; font-weight:700; width:40px; min-width:40px; text-align:center;
+}
+td.cell{ background-color:var(--cbg,var(--card-bg)); width:92px; min-width:92px; position:relative; }
+td.cell.sel{ outline:2px solid var(--accent); outline-offset:-2px; background-image:linear-gradient(var(--sel),var(--sel)); }
+.cell-val{
+  width:100%; height:100%; display:flex; align-items:center; padding:0 7px;
+  font-size:13.5px; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.cell-val.num{ justify-content:flex-end; font-variant-numeric:tabular-nums; }
+.cell-val.err{ color:var(--danger); font-weight:700; }
+.cell-val.b{ font-weight:800; }
+.add-rc{ display:flex; align-items:center; justify-content:center; color:var(--ink-faded); font-size:16px; background:var(--search-bg); cursor:pointer; }
+
+/* ---------- overlay-uri ---------- */
+.overlay-fundal{ position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:50; display:none; align-items:flex-end; justify-content:center; }
+.overlay-fundal.deschis{ display:flex; }
+.card-jos{
+  background:var(--card-bg); width:100%; max-width:520px; border-radius:16px 16px 0 0;
+  padding:16px 16px calc(env(safe-area-inset-bottom,0px) + 16px); box-shadow:0 -6px 24px rgba(0,0,0,.2);
+  max-height:75vh; overflow-y:auto;
+}
+.card-jos h3{ margin:0 0 12px; font-size:17px; text-align:center; }
+.card-jos input[type="text"]{
+  width:100%; border:1px solid var(--card-border); background:var(--search-bg); border-radius:12px;
+  padding:12px 14px; font-family:inherit; font-size:16px; color:var(--ink); margin-bottom:10px;
+}
+.card-jos button.actiune{
+  width:100%; padding:13px; border:none; border-radius:12px; background:var(--search-bg); color:var(--ink);
+  font-family:inherit; font-size:15px; font-weight:600; margin-bottom:8px; text-align:left; padding-left:16px;
+}
+.card-jos button.principal{ background:var(--accent); color:var(--accent-ink); text-align:center; padding-left:13px; }
+.card-jos button.pericol{ color:var(--danger); }
+.meta-txt{ font-size:12.5px; color:var(--ink-soft); margin:0 0 12px; text-align:center; }
+
+#toast{
+  position:fixed; left:50%; bottom:calc(env(safe-area-inset-bottom,0px) + 20px); transform:translateX(-50%) translateY(14px);
+  z-index:90; background:var(--footer-bg); color:var(--footer-text); font-size:13.5px; font-weight:600;
+  padding:10px 16px; border-radius:30px; box-shadow:0 6px 20px rgba(0,0,0,.25); opacity:0; pointer-events:none;
+  transition:opacity .2s, transform .2s; max-width:88%; text-align:center;
+}
+#toast.vizibil{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+/* ---------- ghid formule ---------- */
+.ghid-grup{ margin-bottom:16px; }
+.ghid-grup h4{ margin:0 0 8px; font-size:13px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.03em; }
+.ghid-item{ background:var(--search-bg); border-radius:12px; padding:10px 12px; margin-bottom:8px; }
+.ghid-item code{
+  display:inline-block; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:13.5px; font-weight:700;
+  color:var(--accent); background:var(--card-bg); padding:2px 7px; border-radius:6px; margin-bottom:4px;
+}
+.ghid-item p{ margin:0; font-size:13px; color:var(--ink-soft); line-height:1.4; }
+
+/* ---------- anulare, formatare ---------- */
+.icon-btn:disabled{ opacity:.35; }
+.fx-fmt{ width:38px; height:34px; border-radius:10px; font-size:14px; font-weight:800; color:var(--accent); }
+.fmt-eticheta{ font-size:12px; font-weight:700; color:var(--ink-soft); margin:14px 0 6px; }
+.seg{ display:flex; gap:6px; }
+.seg button{
+  flex:1; padding:11px 6px; border-radius:12px; border:1px solid var(--card-border); background:var(--search-bg);
+  color:var(--ink); font-family:inherit; font-size:14px; font-weight:600;
+}
+.seg button.on{ background:var(--accent); color:var(--accent-ink); border-color:var(--accent); }
+.stepper{ display:flex; align-items:center; gap:10px; }
+.stepper button{
+  width:44px; height:40px; border-radius:12px; border:1px solid var(--card-border); background:var(--search-bg);
+  color:var(--ink); font-size:20px; font-weight:700; font-family:inherit;
+}
+.stepper span{ min-width:48px; text-align:center; font-size:15px; font-weight:700; font-variant-numeric:tabular-nums; }
+.swatches{ display:flex; gap:10px; flex-wrap:wrap; margin-bottom:14px; }
+.swatches button{
+  width:38px; height:38px; border-radius:50%; border:1px solid var(--card-border); padding:0;
+  background:linear-gradient(var(--sw,transparent),var(--sw,transparent)), var(--card-bg); color:var(--ink-soft); font-size:14px;
+}
+.swatches button.sw-none{ background:var(--card-bg); }
+.swatches button.on{ outline:3px solid var(--accent); outline-offset:2px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="h-sus">
+    <h1 class="h-titlu">Tabele</h1>
+    <div class="h-butoane">
+      <button class="icon-btn" id="btn-undo" aria-label="Anulează" disabled>↶</button>
+      <button class="icon-btn" id="btn-redo" aria-label="Refă" disabled>↷</button>
+      <button class="icon-btn" id="btn-ghid" aria-label="Ghid formule">❓</button>
+      <button class="icon-btn" id="btn-import" aria-label="Importă din Revânzări">📥</button>
+      <button class="icon-btn" id="btn-meniu-foaie" aria-label="Opțiuni foaie">⋯</button>
+    </div>
+  </div>
+  <div class="tabs-foi" id="tabs-foi"></div>
+</header>
+
+<div class="formula-bar">
+  <div class="fx-ref" id="fx-ref">A1</div>
+  <input type="text" class="fx-input" id="fx-input" placeholder="Valoare sau =formulă">
+  <button class="icon-btn fx-fmt" id="btn-format" aria-label="Formatare celulă">Aa</button>
+</div>
+
+<div id="grid-wrap"><table class="grid" id="grid"></table></div>
+
+<div id="toast"></div>
+
+<div class="overlay-fundal" id="overlay-foaie">
+  <div class="card-jos">
+    <h3>Foaie</h3>
+    <input type="text" id="input-nume-foaie" placeholder="Nume foaie">
+    <button class="actiune principal" id="btn-redenumeste">Redenumește</button>
+    <button class="actiune" id="btn-duplica">Duplică foaia</button>
+    <button class="actiune" id="btn-export-csv">Exportă CSV (Excel / WhatsApp)</button>
+    <button class="actiune pericol" id="btn-sterge-foaie">Șterge foaia</button>
+    <button class="actiune" id="btn-inchide-meniu">Închide</button>
+  </div>
+</div>
+
+<div class="overlay-fundal" id="overlay-format">
+  <div class="card-jos">
+    <h3>Formatare · <span id="fmt-ref">A1</span></h3>
+    <div class="fmt-eticheta">Se aplică pe</div>
+    <div class="seg" id="seg-scop">
+      <button data-scop="cel">Celulă</button>
+      <button data-scop="rand">Tot rândul</button>
+      <button data-scop="col">Toată coloana</button>
+    </div>
+    <div class="fmt-eticheta">Text</div>
+    <div class="seg"><button id="fmt-bold"><b>B</b> Aldin</button></div>
+    <div class="fmt-eticheta">Număr</div>
+    <div class="seg" id="seg-nf">
+      <button data-nf="auto">Automat</button>
+      <button data-nf="num">Număr</button>
+      <button data-nf="lei">Lei</button>
+    </div>
+    <div class="fmt-eticheta">Zecimale</div>
+    <div class="stepper">
+      <button id="dec-minus" aria-label="Mai puține zecimale">−</button>
+      <span id="dec-val">auto</span>
+      <button id="dec-plus" aria-label="Mai multe zecimale">+</button>
+    </div>
+    <div class="fmt-eticheta">Culoare fundal</div>
+    <div class="swatches" id="swatches"></div>
+    <button class="actiune principal" id="btn-inchide-format">Gata</button>
+  </div>
+</div>
+
+<div class="overlay-fundal" id="overlay-import">
+  <div class="card-jos">
+    <h3>Importă din Revânzări</h3>
+    <p class="meta-txt">Aduce produsele din aplicația Revânzări (dacă e găzduită pe același site) ca o foaie nouă, cu formule gata puse pentru profit. E un instantaneu — nu se actualizează singur după import.</p>
+    <button class="actiune principal" id="btn-confirma-import">Importă acum</button>
+    <button class="actiune" id="btn-anuleaza-import">Anulează</button>
+  </div>
+</div>
+
+<div class="overlay-fundal" id="overlay-ghid">
+  <div class="card-jos">
+    <h3>Ghid formule</h3>
+    <p class="meta-txt">Apasă pe o celulă, scrie în bara de sus. O formulă începe mereu cu <code>=</code>. Argumentele se separă cu <code>;</code> (merge și virgula). Dacă folosești <code>;</code>, poți scrie zecimale cu virgulă: <code>=A1*1,5</code>.</p>
+
+    <div class="ghid-grup">
+      <h4>De bază</h4>
+      <div class="ghid-item"><code>=A1+B1</code><p>Adună conținutul a două celule.</p></div>
+      <div class="ghid-item"><code>=A1-B1</code><p>Scade B1 din A1.</p></div>
+      <div class="ghid-item"><code>=A1*B1</code><p>Înmulțește — util pentru preț × cantitate.</p></div>
+      <div class="ghid-item"><code>=A1/B1</code><p>Împarte A1 la B1.</p></div>
+      <div class="ghid-item"><code>=A1^2</code><p>Ridică la putere (aici, pătratul lui A1).</p></div>
+      <div class="ghid-item"><code>=A1*10%</code><p>Procent: 10% înseamnă 0,1. Ex. <code>=A1*19%</code> pentru TVA.</p></div>
+      <div class="ghid-item"><code>=(A1+B1)*2</code><p>Parantezele schimbă ordinea calculului, ca la matematică.</p></div>
+    </div>
+
+    <div class="ghid-grup">
+      <h4>Funcții pe mai multe celule</h4>
+      <div class="ghid-item"><code>=SUM(A1:A10)</code><p>Adună tot ce e între A1 și A10. Celulele goale și textul sunt ignorate.</p></div>
+      <div class="ghid-item"><code>=AVERAGE(A1:A10)</code><p>Media celulelor cu număr din interval.</p></div>
+      <div class="ghid-item"><code>=COUNT(A1:A10)</code><p>Câte celule din interval conțin un număr.</p></div>
+      <div class="ghid-item"><code>=COUNTA(A1:A10)</code><p>Câte celule din interval nu sunt goale (număr sau text).</p></div>
+      <div class="ghid-item"><code>=MIN(A1:A10)</code> / <code>=MAX(A1:A10)</code><p>Cea mai mică, respectiv cea mai mare valoare din interval.</p></div>
+      <div class="ghid-item"><code>=PRODUCT(A1:A3)</code><p>Înmulțește toate numerele din interval între ele.</p></div>
+    </div>
+
+    <div class="ghid-grup">
+      <h4>Condiții și rotunjire</h4>
+      <div class="ghid-item"><code>=IF(A1&gt;=100;"mare";"mic")</code><p>Dacă A1 e cel puțin 100 scrie „mare”, altfel „mic”. Poți pune și numere sau formule în loc de text. Comparații: <code>=</code> <code>&lt;&gt;</code> <code>&lt;</code> <code>&gt;</code> <code>&lt;=</code> <code>&gt;=</code></p></div>
+      <div class="ghid-item"><code>=ROUND(A1;2)</code><p>Rotunjește la 2 zecimale. <code>=ROUND(A1;0)</code> rotunjește la întreg.</p></div>
+      <div class="ghid-item"><code>=SUMIF(A2:A20;"cafea";C2:C20)</code><p>Adună valorile din C acolo unde în A scrie „cafea”. Merge și cu condiții ca <code>"&gt;10"</code> sau <code>"&lt;&gt;0"</code>.</p></div>
+      <div class="ghid-item"><code>=COUNTIF(B2:B20;"&gt;0")</code><p>Numără celulele din interval care îndeplinesc condiția.</p></div>
+    </div>
+
+    <div class="ghid-grup">
+      <h4>Exemple pentru muncă</h4>
+      <div class="ghid-item"><code>=B2*C2</code><p>Total pe un rând: preț unitar (B2) × cantitate (C2).</p></div>
+      <div class="ghid-item"><code>=SUM(D2:D20)</code><p>Totalul unei coloane întregi de cheltuieli sau ore lucrate.</p></div>
+      <div class="ghid-item"><code>=ROUND(B2*1,19;2)</code><p>Preț cu TVA, rotunjit la bani.</p></div>
+    </div>
+
+    <div class="ghid-grup">
+      <h4>Aspect și anulare</h4>
+      <div class="ghid-item"><code>Aa</code><p>Din dreapta barei de formule: aldin, lei, număr de zecimale și culoare de fundal — pentru o celulă, un rând (ex. antetul) sau o coloană.</p></div>
+      <div class="ghid-item"><code>↶ ↷</code><p>Anulează sau refă ultima modificare, inclusiv ștergeri de rânduri, coloane sau foi.</p></div>
+    </div>
+
+    <div class="ghid-grup">
+      <h4>Când vezi o eroare</h4>
+      <div class="ghid-item"><code>#ERR</code><p>Formula are o problemă: împarte la zero, are o greșeală de scriere sau folosește text într-un calcul (<code>=A1+B1</code> cu text în A1). Dacă ștergi o celulă la care se referă formula, în bară vei vedea <code>#REF</code>.</p></div>
+      <div class="ghid-item"><code>#CIRC</code><p>Referință circulară — o celulă depinde, direct sau indirect, chiar de ea însăși.</p></div>
+    </div>
+
+    <button class="actiune principal" id="btn-inchide-ghid">Am înțeles</button>
+  </div>
+</div>
+
+<script>
+const $ = (id)=>document.getElementById(id);
+const CHEIE = "tabele-date";
+const NUM_RE = /^-?\d+([.,]\d+)?$/;
+const esteEroare = (v)=> v==="#ERR" || v==="#CIRC";
+
+/* ---------- adresare celule ---------- */
+function colLetter(n){
+  let s=""; n=n+1;
+  while(n>0){ const r=(n-1)%26; s=String.fromCharCode(65+r)+s; n=Math.floor((n-1)/26); }
+  return s;
+}
+function colIndex(letters){
+  let n=0; for(const ch of letters) n=n*26+(ch.charCodeAt(0)-64);
+  return n-1;
+}
+function parseRef(ref){
+  const m = /^([A-Za-z]+)(\d+)$/.exec(ref);
+  if(!m) return null;
+  return { col: colIndex(m[1].toUpperCase()), row: parseInt(m[2],10)-1 };
+}
+function cellRef(col,row){ return colLetter(col)+(row+1); }
+
+/* ---------- motor de formule ---------- */
+function tokenize(s){
+  const tokens = [];
+  const stack = [];                       // "f" = paranteză de funcție, "g" = paranteză obișnuită
+  const sepPunctVirgula = /;/.test(s.replace(/"(?:[^"]|"")*"/g, ""));
+  const inFn = ()=>stack.includes("f");
+  let i = 0, m;
+  while(i < s.length){
+    const ch = s[i];
+    if(/\s/.test(ch)){ i++; continue; }
+    if(ch === '"'){
+      let j = i+1, str = "";
+      while(j < s.length){
+        if(s[j] === '"'){ if(s[j+1] === '"'){ str += '"'; j += 2; continue; } break; }
+        str += s[j++];
+      }
+      if(j >= s.length) throw new Error("string neînchis");
+      tokens.push({t:"str", v:str}); i = j+1; continue;
+    }
+    const rest = s.slice(i);
+    if((m = /^[A-Za-z]+\d+(?![A-Za-z0-9(])/.exec(rest))){ tokens.push({t:"ref", v:m[0].toUpperCase()}); i += m[0].length; continue; }
+    if((m = /^[A-Za-z]+/.exec(rest))){ tokens.push({t:"name", v:m[0].toUpperCase()}); i += m[0].length; continue; }
+    if((sepPunctVirgula || !inFn()) && (m = /^\d+,\d+/.exec(rest))){
+      tokens.push({t:"num", v:parseFloat(m[0].replace(",","."))}); i += m[0].length; continue;
+    }
+    if((m = /^\d+(?:\.\d+)?/.exec(rest))){ tokens.push({t:"num", v:parseFloat(m[0])}); i += m[0].length; continue; }
+    if((m = /^(<=|>=|<>)/.exec(rest))){ tokens.push({t:"op", v:m[0]}); i += 2; continue; }
+    if("()+-*/^,;:%<>=".indexOf(ch) !== -1){
+      if(ch === "(") stack.push(tokens.length && tokens[tokens.length-1].t==="name" ? "f" : "g");
+      else if(ch === ")") stack.pop();
+      if(ch === "," && sepPunctVirgula) throw new Error("separator amestecat");
+      tokens.push({t:"op", v:ch}); i++; continue;
+    }
+    throw new Error("caracter necunoscut");
+  }
+  return tokens;
+}
+class CircularRefError extends Error { constructor(ref){ super("circular:"+ref); this.ref = ref; } }
+
+function evalFormula(str, getVal){
+  const tokens = tokenize(str);
+  let i = 0;
+  const peek = ()=>tokens[i];
+  const next = ()=>tokens[i++];
+  const isOp = (t,v)=> !!t && t.t==="op" && t.v===v;
+  const expectOp = (v)=>{ if(!isOp(next(), v)) throw new Error("expected "+v); };
+
+  function numOf(v){
+    if(v === null) return 0;
+    if(typeof v === "number") return v;
+    if(typeof v === "boolean") return v ? 1 : 0;
+    if(typeof v === "string"){
+      if(esteEroare(v)) throw new Error("ref-error");
+      const s = v.trim();
+      if(NUM_RE.test(s)) return parseFloat(s.replace(",","."));
+      throw new Error("text în calcul");
+    }
+    throw new Error("valoare invalidă");
+  }
+  function refVal(ref){
+    const v = getVal(ref);
+    if(esteEroare(v)) throw new Error("ref-error");
+    return v;
+  }
+  function scalar(a){
+    if(a.range){
+      if(a.range[0] !== a.range[1]) throw new Error("interval în loc de valoare");
+      const v = refVal(a.range[0]); return v === null ? 0 : v;
+    }
+    return a.value === null ? 0 : a.value;
+  }
+  function cmp(a, b, op){
+    if(a === null) a = typeof b === "string" ? "" : 0;
+    if(b === null) b = typeof a === "string" ? "" : 0;
+    if(typeof a === "boolean") a = a ? 1 : 0;
+    if(typeof b === "boolean") b = b ? 1 : 0;
+    let c;
+    if(typeof a === typeof b){
+      if(typeof a === "string"){ a = a.toLowerCase(); b = b.toLowerCase(); }
+      if(typeof a === "number" && Math.abs(a-b) <= 1e-9*Math.max(1,Math.abs(a),Math.abs(b))) c = 0;
+      else c = a < b ? -1 : a > b ? 1 : 0;
+    } else c = typeof a === "number" ? -1 : 1;
+    switch(op){
+      case "=": return c === 0;
+      case "<>": return c !== 0;
+      case "<": return c < 0;
+      case ">": return c > 0;
+      case "<=": return c <= 0;
+      default: return c >= 0;
+    }
+  }
+
+  function parseCompare(){
+    let v = parseAdd();
+    while(peek() && peek().t==="op" && ["=","<>","<",">","<=",">="].indexOf(peek().v) !== -1){
+      const op = next().v; const r = parseAdd(); v = cmp(v, r, op);
+    }
+    return v;
+  }
+  function parseAdd(){
+    let v = parseTerm();
+    while(isOp(peek(),"+") || isOp(peek(),"-")){
+      const op = next().v; const r = parseTerm();
+      v = op==="+" ? numOf(v)+numOf(r) : numOf(v)-numOf(r);
+    }
+    return v;
+  }
+  function parseTerm(){
+    let v = parsePow();
+    while(isOp(peek(),"*") || isOp(peek(),"/")){
+      const op = next().v; const r = parsePow();
+      v = op==="*" ? numOf(v)*numOf(r) : numOf(v)/numOf(r);
+    }
+    return v;
+  }
+  function parsePow(){
+    let v = parseUnary();
+    while(isOp(peek(),"^")){ next(); v = Math.pow(numOf(v), numOf(parseUnary())); }
+    return v;
+  }
+  function parseUnary(){
+    if(isOp(peek(),"-")){ next(); return -numOf(parseUnary()); }
+    if(isOp(peek(),"+")){ next(); return numOf(parseUnary()); }
+    return parsePostfix();
+  }
+  function parsePostfix(){
+    let v = parsePrimary();
+    while(isOp(peek(),"%")){ next(); v = numOf(v)/100; }
+    return v;
+  }
+  function parsePrimary(){
+    const t = next();
+    if(!t) throw new Error("formulă incompletă");
+    if(t.t === "num") return t.v;
+    if(t.t === "str") return t.v;
+    if(t.t === "ref") return refVal(t.v);
+    if(t.t === "name"){
+      expectOp("(");
+      const args = parseArgs();
+      expectOp(")");
+      return callFunc(t.v, args);
+    }
+    if(isOp(t,"(")){ const v = parseCompare(); expectOp(")"); return v; }
+    throw new Error("simbol neașteptat");
+  }
+  function parseArgs(){
+    const args = [];
+    if(isOp(peek(),")")) return args;
+    args.push(parseArg());
+    while(isOp(peek(),",") || isOp(peek(),";")){ next(); args.push(parseArg()); }
+    return args;
+  }
+  function parseArg(){
+    const t = peek();
+    if(t && t.t === "ref"){
+      const n1 = tokens[i+1], n2 = tokens[i+2];
+      if(isOp(n1,":") && n2 && n2.t==="ref"){ i += 3; return { range:[t.v, n2.v] }; }
+      if(!n1 || isOp(n1,",") || isOp(n1,";") || isOp(n1,")")){ i++; return { range:[t.v, t.v] }; }
+    }
+    return { value: parseCompare() };
+  }
+  function expandRange(a, b){
+    const pa = parseRef(a), pb = parseRef(b);
+    const c0=Math.min(pa.col,pb.col), c1=Math.max(pa.col,pb.col);
+    const r0=Math.min(pa.row,pb.row), r1=Math.max(pa.row,pb.row);
+    const out = [];
+    for(let r=r0;r<=r1;r++) for(let c=c0;c<=c1;c++) out.push(cellRef(c,r));
+    return out;
+  }
+  // numerele dintr-un set de argumente; celulele goale și textul din intervale sunt ignorate
+  function gather(args){
+    const nums = []; let nonEmpty = 0;
+    args.forEach(a=>{
+      if(a.range){
+        expandRange(a.range[0], a.range[1]).forEach(ref=>{
+          const v = refVal(ref);
+          if(v === null) return;
+          nonEmpty++;
+          if(typeof v === "number") nums.push(v);
+        });
+      } else {
+        nonEmpty++;
+        nums.push(numOf(a.value));
+      }
+    });
+    return { nums, nonEmpty };
+  }
+  function makeCriteria(c){
+    let op = "=", operand = c;
+    if(typeof c === "string"){
+      const m = /^(<=|>=|<>|<|>|=)?([\s\S]*)$/.exec(c);
+      op = m[1] || "="; operand = m[2];
+      const s = operand.trim();
+      if(NUM_RE.test(s)) operand = parseFloat(s.replace(",","."));
+    } else if(typeof c === "boolean") operand = c ? 1 : 0;
+    return (v)=>{
+      if(esteEroare(v)) return false;
+      if(typeof operand === "number"){
+        if(typeof v !== "number") return op === "<>";
+        return cmp(v, operand, op);
+      }
+      const eq = typeof v === "string" && v.toLowerCase() === String(operand).toLowerCase();
+      if(op === "=") return eq;
+      if(op === "<>") return !eq;
+      if(typeof v !== "string") return false;
+      return cmp(v, operand, op);
+    };
+  }
+  function callFunc(name, args){
+    switch(name){
+      case "SUM": return gather(args).nums.reduce((s,x)=>s+x, 0);
+      case "AVERAGE": { const n = gather(args).nums; return n.length ? n.reduce((s,x)=>s+x,0)/n.length : 0; }
+      case "COUNT": return gather(args).nums.length;
+      case "COUNTA": return gather(args).nonEmpty;
+      case "MIN": { const n = gather(args).nums; return n.length ? Math.min.apply(null,n) : 0; }
+      case "MAX": { const n = gather(args).nums; return n.length ? Math.max.apply(null,n) : 0; }
+      case "PRODUCT": { const n = gather(args).nums; return n.length ? n.reduce((s,x)=>s*x,1) : 0; }
+      case "ROUND": {
+        if(args.length < 1 || args.length > 2) throw new Error("ROUND: argumente");
+        const x = numOf(scalar(args[0]));
+        let n = args.length === 2 ? Math.trunc(numOf(scalar(args[1]))) : 0;
+        n = Math.max(-15, Math.min(15, n));
+        const m = Math.pow(10, Math.abs(n)), ax = Math.abs(x);
+        const r = n >= 0 ? Math.round(ax*m*(1+1e-12))/m : Math.round(ax/m*(1+1e-12))*m;
+        return x < 0 ? -r : r;
+      }
+      case "IF": {
+        if(args.length < 2 || args.length > 3) throw new Error("IF: argumente");
+        const c = scalar(args[0]);
+        let truth;
+        if(typeof c === "boolean") truth = c;
+        else if(typeof c === "number") truth = c !== 0;
+        else throw new Error("IF: condiție text");
+        if(truth) return scalar(args[1]);
+        return args.length === 3 ? scalar(args[2]) : false;
+      }
+      case "SUMIF":
+      case "COUNTIF": {
+        const esteSum = name === "SUMIF";
+        if(args.length < 2 || args.length > (esteSum ? 3 : 2)) throw new Error(name+": argumente");
+        if(!args[0].range) throw new Error(name+": interval");
+        const test = makeCriteria(scalar(args[1]));
+        const refs = expandRange(args[0].range[0], args[0].range[1]);
+        let sumRefs = refs;
+        if(esteSum && args.length === 3){
+          if(!args[2].range) throw new Error("SUMIF: interval sumă");
+          const pa = parseRef(args[0].range[0]), pb = parseRef(args[0].range[1]);
+          const w = Math.abs(pa.col-pb.col)+1, h = Math.abs(pa.row-pb.row)+1;
+          const sa = parseRef(args[2].range[0]), sb = parseRef(args[2].range[1]);
+          const c0 = Math.min(sa.col,sb.col), r0 = Math.min(sa.row,sb.row);
+          sumRefs = [];
+          for(let r=0;r<h;r++) for(let c=0;c<w;c++) sumRefs.push(cellRef(c0+c, r0+r));
+        }
+        let total = 0, count = 0;
+        refs.forEach((ref, idx)=>{
+          const v = getVal(ref);
+          if(!test(v)) return;
+          count++;
+          if(esteSum){
+            const sv = getVal(sumRefs[idx]);
+            if(esteEroare(sv)) throw new Error("ref-error");
+            if(typeof sv === "number") total += sv;
+          }
+        });
+        return esteSum ? total : count;
+      }
+      default: throw new Error("funcție necunoscută "+name);
+    }
+  }
+  const result = parseCompare();
+  if(i !== tokens.length) throw new Error("simboluri în plus");
+  return result;
+}
+
+function recomputeSheet(sheet){
+  const memo = {};
+  const visiting = new Set();
+  function getVal(ref){
+    ref = ref.toUpperCase();
+    if(Object.prototype.hasOwnProperty.call(memo, ref)) return memo[ref];
+    if(visiting.has(ref)) throw new CircularRefError(ref);
+    const raw = sheet.data[ref];
+    if(raw === undefined || raw === "" || raw === null){ memo[ref] = null; return null; }
+    if(typeof raw === "string" && raw.trim().startsWith("=")){
+      visiting.add(ref);
+      let val;
+      try{
+        val = evalFormula(raw.trim().slice(1), getVal);
+        if(val === null) val = 0;
+        if(typeof val === "number" && !isFinite(val)) val = "#ERR";
+      }catch(e){
+        val = (e instanceof CircularRefError) ? "#CIRC" : "#ERR";
+        visiting.delete(ref);
+        memo[ref] = val;
+        if(e instanceof CircularRefError && e.ref !== ref) throw e;
+        return val;
+      }
+      visiting.delete(ref);
+      memo[ref] = val;
+      return val;
+    }
+    const str = String(raw).trim();
+    memo[ref] = NUM_RE.test(str) ? parseFloat(str.replace(",",".")) : raw;
+    return memo[ref];
+  }
+  Object.keys(sheet.data).forEach(ref=>getVal(ref));
+  sheet.values = memo;
+}
+
+/* ---------- ajustarea formulelor la ștergerea unui rând / a unei coloane ---------- */
+function shiftRefs(formula, axis, idx){
+  const RE = /([A-Za-z]+)(\d+)(?::([A-Za-z]+)(\d+))?(?![A-Za-z0-9(])/g;
+  const repl = (match, c1, r1, c2, r2)=>{
+    const a = { col: colIndex(c1.toUpperCase()), row: +r1-1 };
+    if(c2 === undefined){
+      const v = axis==="col" ? a.col : a.row;
+      if(v === idx) return "#REF";
+      if(v > idx){ if(axis==="col") a.col--; else a.row--; }
+      return cellRef(a.col, a.row);
+    }
+    const b = { col: colIndex(c2.toUpperCase()), row: +r2-1 };
+    const lo = axis==="col" ? Math.min(a.col,b.col) : Math.min(a.row,b.row);
+    const hi = axis==="col" ? Math.max(a.col,b.col) : Math.max(a.row,b.row);
+    if(lo === idx && hi === idx) return "#REF";
+    const nlo = lo > idx ? lo-1 : lo;
+    const nhi = hi >= idx ? hi-1 : hi;
+    if(axis === "col"){
+      return cellRef(nlo, Math.min(a.row,b.row)) + ":" + cellRef(nhi, Math.max(a.row,b.row));
+    }
+    return cellRef(Math.min(a.col,b.col), nlo) + ":" + cellRef(Math.max(a.col,b.col), nhi);
+  };
+  return formula.split(/("(?:[^"]|"")*")/).map((seg,k)=> k%2 ? seg : seg.replace(RE, repl)).join("");
+}
+
+/* ---------- stare ---------- */
+function idNou(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+function foaieNoua(nume){ return { id:idNou(), nume:nume||"Foaie", cols:8, rows:20, data:{}, fmt:{} }; }
+
+let store = { sheets:[foaieNoua("Foaie 1")], activ:null };
+store.activ = store.sheets[0].id;
+let sel = { col:0, row:0 };
+
+function normalizeazaStore(){
+  store.sheets.forEach(s=>{
+    if(!s.data) s.data = {};
+    if(!s.fmt) s.fmt = {};
+    if(!s.cols) s.cols = 8;
+    if(!s.rows) s.rows = 20;
+    delete s.values;
+  });
+  if(!store.sheets.some(s=>s.id===store.activ)) store.activ = store.sheets[0].id;
+}
+function incarca(){
+  try{
+    const raw = localStorage.getItem(CHEIE);
+    if(raw){
+      const parsat = JSON.parse(raw);
+      if(parsat && Array.isArray(parsat.sheets) && parsat.sheets.length){
+        store = { sheets:parsat.sheets, activ:parsat.activ };
+      }
+    }
+  }catch(e){}
+  normalizeazaStore();
+}
+// instantaneu al stării, fără rezultatele calculate (se recalculează la afișare)
+function snap(){ return JSON.stringify({sheets:store.sheets, activ:store.activ}, (k,v)=> k==="values" ? undefined : v); }
+let tSalvare = null, avertizatSalvare = false;
+function salveaza(){
+  clearTimeout(tSalvare);
+  try{ localStorage.setItem(CHEIE, snap()); }
+  catch(e){ if(!avertizatSalvare){ avertizatSalvare = true; arataToast("⚠ Nu am putut salva (memorie plină?)"); } }
+}
+function salveazaIntarziat(){ clearTimeout(tSalvare); tSalvare = setTimeout(salveaza, 300); }
+function foaieCurenta(){ return store.sheets.find(s=>s.id===store.activ) || store.sheets[0]; }
+
+let toastTimeout = null;
+function arataToast(text){
+  const el = $("toast"); el.textContent = text; el.classList.add("vizibil");
+  clearTimeout(toastTimeout); toastTimeout = setTimeout(()=>el.classList.remove("vizibil"), 2200);
+}
+
+/* ---------- anulare / refacere ---------- */
+const undoStack = [], redoStack = [];
+function actualizeazaButoaneUndo(){
+  $("btn-undo").disabled = !undoStack.length;
+  $("btn-redo").disabled = !redoStack.length;
+}
+function pushUndo(){
+  undoStack.push(snap());
+  if(undoStack.length > 60) undoStack.shift();
+  redoStack.length = 0;
+  actualizeazaButoaneUndo();
+}
+function restaureaza(text){
+  const o = JSON.parse(text);
+  store = { sheets:o.sheets, activ:o.activ };
+  normalizeazaStore();
+  const s = foaieCurenta();
+  sel.col = Math.min(sel.col, s.cols-1); sel.row = Math.min(sel.row, s.rows-1);
+  salveaza(); randareTot(); actualizeazaButoaneUndo();
+}
+function undo(){
+  if(!undoStack.length) return;
+  redoStack.push(snap());
+  restaureaza(undoStack.pop());
+  arataToast("↶ Anulat");
+}
+function redo(){
+  if(!redoStack.length) return;
+  undoStack.push(snap());
+  restaureaza(redoStack.pop());
+  arataToast("↷ Refăcut");
+}
+
+/* ---------- formatare ---------- */
+const BG = {
+  g:"rgba(46,125,97,.30)", a:"rgba(66,133,244,.28)", y:"rgba(251,188,5,.38)",
+  r:"rgba(234,67,53,.28)", p:"rgba(171,71,188,.28)", x:"rgba(128,128,128,.28)"
+};
+function escHtml(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+function formatVal(v, f){
+  if(typeof v === "boolean") return v ? "ADEVĂRAT" : "FALS";
+  if(typeof v === "number"){
+    let s;
+    if(f && f.nf){
+      const d = f.dec == null ? 2 : f.dec;
+      s = v.toLocaleString("ro-RO", {minimumFractionDigits:d, maximumFractionDigits:d});
+    } else {
+      s = v.toLocaleString("ro-RO", {maximumFractionDigits:2, useGrouping:false});
+    }
+    s = s.replace(/^[-−](0(?:,0+)?)$/, "$1");
+    return (f && f.nf === "lei") ? s+" lei" : s;
+  }
+  return v == null ? "" : String(v);
+}
+
+/* ---------- randare tab-uri foi ---------- */
+function randareTabsFoi(){
+  const cont = $("tabs-foi");
+  cont.innerHTML = "";
+  store.sheets.forEach(s=>{
+    const b = document.createElement("button");
+    b.className = "tab-foaie" + (s.id===store.activ ? " on":"");
+    b.textContent = s.nume;
+    b.addEventListener("click", ()=>{ store.activ = s.id; sel={col:0,row:0}; salveaza(); randareTot(); });
+    cont.appendChild(b);
+  });
+  const add = document.createElement("button");
+  add.className = "tab-foaie-add"; add.textContent = "＋"; add.setAttribute("aria-label","Foaie nouă");
+  add.addEventListener("click", ()=>{
+    pushUndo();
+    const s = foaieNoua("Foaie "+(store.sheets.length+1));
+    store.sheets.push(s); store.activ = s.id; sel={col:0,row:0};
+    salveaza(); randareTot();
+  });
+  cont.appendChild(add);
+}
+
+/* ---------- randare grilă ---------- */
+let editand = false;   // true după prima tastă într-o celulă (un singur pas de anulare per editare)
+function randareGrid(){
+  const sheet = foaieCurenta();
+  recomputeSheet(sheet);
+  const grid = $("grid");
+  let html = "<thead><tr><th class=\"corner\"></th>";
+  for(let c=0;c<sheet.cols;c++) html += `<th class="col-head" data-colh="${c}">${colLetter(c)}</th>`;
+  html += `<th class="add-rc" data-addcol="1" style="width:40px;min-width:40px;">+</th></tr></thead><tbody>`;
+  for(let r=0;r<sheet.rows;r++){
+    html += `<tr><th class="row-head" data-rowh="${r}">${r+1}</th>`;
+    for(let c=0;c<sheet.cols;c++){
+      const ref = cellRef(c,r);
+      const val = sheet.values[ref];
+      const f = sheet.fmt[ref] || null;
+      const isErr = esteEroare(val);
+      const isNum = typeof val === "number";
+      const isSel = sel.col===c && sel.row===r;
+      const bg = f && f.bg && BG[f.bg] ? ` style="--cbg:${BG[f.bg]}"` : "";
+      html += `<td class="cell${isSel?" sel":""}" data-col="${c}" data-row="${r}"${bg}><div class="cell-val${isNum?" num":""}${isErr?" err":""}${f&&f.b?" b":""}">${escHtml(formatVal(val,f))}</div></td>`;
+    }
+    html += `</tr>`;
+  }
+  html += `<tr><th class="add-rc" data-addrow="1">+</th>`;
+  for(let c=0;c<sheet.cols;c++) html += `<td></td>`;
+  html += `<td></td></tr>`;
+  html += "</tbody>";
+  grid.innerHTML = html;
+  randareFormulaBar();
+}
+function randareFormulaBar(){
+  const sheet = foaieCurenta();
+  editand = false;
+  $("fx-ref").textContent = cellRef(sel.col, sel.row);
+  const raw = sheet.data[cellRef(sel.col, sel.row)];
+  $("fx-input").value = raw==null ? "" : String(raw);
+}
+function randareTot(){ randareTabsFoi(); randareGrid(); actualizeazaButoaneUndo(); }
+
+/* ---------- selecție & editare (totul prin bara de formule) ---------- */
+function selecteazaCelula(c,r, selecteazaTot){
+  sel = {col:c, row:r};
+  randareGrid();
+  const input = $("fx-input");
+  input.focus();
+  if(selecteazaTot) input.select();
+}
+function mutaSelectie(dc,dr){
+  const sheet = foaieCurenta();
+  sel.col = Math.max(0, Math.min(sheet.cols-1, sel.col+dc));
+  sel.row = Math.max(0, Math.min(sheet.rows-1, sel.row+dr));
+  randareGrid();
+  $("fx-input").focus();
+  $("fx-input").select();
+}
+
+// fiecare tastă se salvează imediat: nu se pierde nimic dacă pleci din celulă fără Enter
+$("fx-input").addEventListener("input", ()=>{
+  const sheet = foaieCurenta();
+  const ref = cellRef(sel.col, sel.row);
+  if(!editand){ pushUndo(); editand = true; }
+  const v = $("fx-input").value;
+  if(v === "") delete sheet.data[ref]; else sheet.data[ref] = v;
+  salveazaIntarziat();
+});
+$("fx-input").addEventListener("keydown",(e)=>{
+  if(e.key === "Enter"){ e.preventDefault(); mutaSelectie(0,1); }
+});
+
+$("grid-wrap").addEventListener("click",(e)=>{
+  const addcol = e.target.closest("[data-addcol]");
+  if(addcol){ pushUndo(); const s=foaieCurenta(); s.cols++; salveaza(); randareGrid(); return; }
+  const addrow = e.target.closest("[data-addrow]");
+  if(addrow){ pushUndo(); const s=foaieCurenta(); s.rows++; salveaza(); randareGrid(); return; }
+  const colh = e.target.closest("[data-colh]");
+  if(colh){
+    const c = +colh.dataset.colh;
+    const s = foaieCurenta();
+    if(s.cols <= 1) return;
+    if(!confirm(`Ștergi coloana ${colLetter(c)}?`)) return;
+    pushUndo(); stergeColoana(s,c); salveaza(); randareGrid(); return;
+  }
+  const rowh = e.target.closest("[data-rowh]");
+  if(rowh){
+    const r = +rowh.dataset.rowh;
+    const s = foaieCurenta();
+    if(s.rows <= 1) return;
+    if(!confirm(`Ștergi rândul ${r+1}?`)) return;
+    pushUndo(); stergeRand(s,r); salveaza(); randareGrid(); return;
+  }
+  const td = e.target.closest("td.cell");
+  if(td){ selecteazaCelula(+td.dataset.col, +td.dataset.row, true); }
+});
+function stergeAxa(s, axis, idx){
+  const date = {}, fmt = {};
+  const mapRef = (p)=>{
+    const v = axis==="col" ? p.col : p.row;
+    if(v === idx) return null;
+    const nv = v > idx ? v-1 : v;
+    return axis==="col" ? cellRef(nv,p.row) : cellRef(p.col,nv);
+  };
+  Object.keys(s.data).forEach(ref=>{
+    const nr = mapRef(parseRef(ref)); if(!nr) return;
+    let v = s.data[ref];
+    if(typeof v === "string" && v.trim().startsWith("=")) v = shiftRefs(v, axis, idx);
+    date[nr] = v;
+  });
+  Object.keys(s.fmt).forEach(ref=>{
+    const nr = mapRef(parseRef(ref)); if(nr) fmt[nr] = s.fmt[ref];
+  });
+  s.data = date; s.fmt = fmt;
+}
+function stergeColoana(s,c){
+  stergeAxa(s,"col",c); s.cols--;
+  if(sel.col >= s.cols) sel.col = s.cols-1;
+}
+function stergeRand(s,r){
+  stergeAxa(s,"row",r); s.rows--;
+  if(sel.row >= s.rows) sel.row = s.rows-1;
+}
+
+/* ---------- anulare / refacere (butoane) ---------- */
+$("btn-undo").addEventListener("click", undo);
+$("btn-redo").addEventListener("click", redo);
+
+/* ---------- meniu foaie (redenumește / duplică / exportă / șterge) ---------- */
+$("btn-meniu-foaie").addEventListener("click", ()=>{
+  $("input-nume-foaie").value = foaieCurenta().nume;
+  $("overlay-foaie").classList.add("deschis");
+});
+$("btn-inchide-meniu").addEventListener("click", ()=>$("overlay-foaie").classList.remove("deschis"));
+$("btn-redenumeste").addEventListener("click", ()=>{
+  const nume = $("input-nume-foaie").value.trim();
+  if(nume && nume !== foaieCurenta().nume){ pushUndo(); foaieCurenta().nume = nume; salveaza(); randareTabsFoi(); }
+  $("overlay-foaie").classList.remove("deschis");
+});
+$("btn-duplica").addEventListener("click", ()=>{
+  pushUndo();
+  const s = foaieCurenta();
+  const copie = { id:idNou(), nume:s.nume+" (copie)", cols:s.cols, rows:s.rows,
+    data:JSON.parse(JSON.stringify(s.data)), fmt:JSON.parse(JSON.stringify(s.fmt)) };
+  store.sheets.push(copie); store.activ = copie.id;
+  salveaza(); $("overlay-foaie").classList.remove("deschis"); randareTot();
+});
+$("btn-sterge-foaie").addEventListener("click", ()=>{
+  if(store.sheets.length <= 1){ alert("Trebuie să rămână cel puțin o foaie."); return; }
+  if(!confirm(`Ștergi foaia "${foaieCurenta().nume}"? Poți anula cu ↶.`)) return;
+  pushUndo();
+  store.sheets = store.sheets.filter(s=>s.id !== store.activ);
+  store.activ = store.sheets[0].id; sel={col:0,row:0};
+  salveaza(); $("overlay-foaie").classList.remove("deschis"); randareTot();
+});
+
+/* ---------- export CSV ---------- */
+function textCsv(v){
+  if(v == null) return "";
+  if(typeof v === "boolean") return v ? "ADEVĂRAT" : "FALS";
+  if(typeof v === "number") return String(parseFloat(v.toPrecision(12))).replace(".",",");
+  const s = String(v);
+  return /[;"\n\r]/.test(s) ? '"'+s.replace(/"/g,'""')+'"' : s;
+}
+// separator ";" și zecimale cu virgulă: se deschide direct în Excel cu setări românești
+function construiesteCsv(sheet){
+  recomputeSheet(sheet);
+  let maxC = -1, maxR = -1;
+  Object.keys(sheet.data).forEach(ref=>{
+    const p = parseRef(ref);
+    if(p.col > maxC) maxC = p.col;
+    if(p.row > maxR) maxR = p.row;
+  });
+  if(maxC < 0) return null;
+  const linii = [];
+  for(let r=0;r<=maxR;r++){
+    const celule = [];
+    for(let c=0;c<=maxC;c++) celule.push(textCsv(sheet.values[cellRef(c,r)]));
+    linii.push(celule.join(";"));
+  }
+  return linii.join("\r\n");
+}
+function numeFisier(nume){
+  const s = nume.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^\w\- ]+/g,"").trim().replace(/\s+/g,"_");
+  return (s || "tabel") + ".csv";
+}
+async function exportaCsv(){
+  const sheet = foaieCurenta();
+  const csv = construiesteCsv(sheet);
+  if(csv === null){ arataToast("Foaia e goală — nu am ce exporta."); return; }
+  const blob = new Blob(["\uFEFF"+csv], {type:"text/csv;charset=utf-8"});
+  const nume = numeFisier(sheet.nume);
+  try{
+    const file = new File([blob], nume, {type:"text/csv"});
+    if(navigator.canShare && navigator.canShare({files:[file]})){
+      await navigator.share({files:[file], title:sheet.nume});
+      return;
+    }
+  }catch(e){ if(e && e.name === "AbortError") return; }
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = nume; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 4000);
+  arataToast("✓ "+nume+" descărcat");
+}
+$("btn-export-csv").addEventListener("click", ()=>{
+  $("overlay-foaie").classList.remove("deschis");
+  exportaCsv();
+});
+
+/* ---------- formatare celule (fereastra „Aa”) ---------- */
+let scopFmt = "cel";
+function refsScop(sheet){
+  const out = [];
+  if(scopFmt === "rand"){ for(let c=0;c<sheet.cols;c++) out.push(cellRef(c, sel.row)); }
+  else if(scopFmt === "col"){ for(let r=0;r<sheet.rows;r++) out.push(cellRef(sel.col, r)); }
+  else out.push(cellRef(sel.col, sel.row));
+  return out;
+}
+function fmtCurent(){ return foaieCurenta().fmt[cellRef(sel.col, sel.row)] || {}; }
+function aplicaFmt(mut){
+  const sheet = foaieCurenta();
+  pushUndo();
+  refsScop(sheet).forEach(ref=>{
+    const f = Object.assign({}, sheet.fmt[ref]);
+    mut(f);
+    Object.keys(f).forEach(k=>{ if(f[k]===undefined || f[k]==="" || f[k]===false) delete f[k]; });
+    if(Object.keys(f).length) sheet.fmt[ref] = f; else delete sheet.fmt[ref];
+  });
+  salveaza(); randareGrid(); randareFormat();
+}
+function randareFormat(){
+  const f = fmtCurent();
+  $("fmt-ref").textContent = cellRef(sel.col, sel.row);
+  document.querySelectorAll("#seg-scop button").forEach(b=>b.classList.toggle("on", b.dataset.scop===scopFmt));
+  $("fmt-bold").classList.toggle("on", !!f.b);
+  document.querySelectorAll("#seg-nf button").forEach(b=>b.classList.toggle("on", b.dataset.nf === (f.nf||"auto")));
+  $("dec-val").textContent = f.nf ? (f.dec == null ? 2 : f.dec) : "auto";
+  document.querySelectorAll("#swatches button").forEach(b=>b.classList.toggle("on", b.dataset.bg === (f.bg||"")));
+}
+(function construiesteSwatches(){
+  const cont = $("swatches");
+  const mk = (cod, css, aria)=>{
+    const b = document.createElement("button");
+    b.dataset.bg = cod; b.setAttribute("aria-label", aria);
+    if(css) b.style.setProperty("--sw", css); else { b.className = "sw-none"; b.textContent = "✕"; }
+    cont.appendChild(b);
+  };
+  mk("", null, "Fără culoare");
+  [["g","verde"],["a","albastru"],["y","galben"],["r","roșu"],["p","mov"],["x","gri"]].forEach(([k,n])=>mk(k, BG[k], n));
+})();
+$("btn-format").addEventListener("click", ()=>{
+  $("fx-input").blur();
+  scopFmt = "cel";
+  randareFormat();
+  $("overlay-format").classList.add("deschis");
+});
+$("btn-inchide-format").addEventListener("click", ()=>$("overlay-format").classList.remove("deschis"));
+$("seg-scop").addEventListener("click", (e)=>{
+  const b = e.target.closest("button"); if(!b) return;
+  scopFmt = b.dataset.scop; randareFormat();
+});
+$("fmt-bold").addEventListener("click", ()=>{
+  const nou = !fmtCurent().b;
+  aplicaFmt(f=>{ f.b = nou ? 1 : undefined; });
+});
+$("seg-nf").addEventListener("click", (e)=>{
+  const b = e.target.closest("button"); if(!b) return;
+  const v = b.dataset.nf;
+  aplicaFmt(f=>{
+    if(v === "auto"){ f.nf = undefined; f.dec = undefined; }
+    else { f.nf = v; if(f.dec == null) f.dec = 2; }
+  });
+});
+function schimbaZecimale(delta){
+  const cur = fmtCurent();
+  const nou = Math.max(0, Math.min(4, (cur.dec == null ? 2 : cur.dec) + delta));
+  aplicaFmt(f=>{ if(!f.nf) f.nf = "num"; f.dec = nou; });
+}
+$("dec-minus").addEventListener("click", ()=>schimbaZecimale(-1));
+$("dec-plus").addEventListener("click", ()=>schimbaZecimale(1));
+$("swatches").addEventListener("click", (e)=>{
+  const b = e.target.closest("button"); if(!b) return;
+  const v = b.dataset.bg;
+  aplicaFmt(f=>{ f.bg = v || undefined; });
+});
+
+/* ---------- import din Revânzări ---------- */
+$("btn-import").addEventListener("click", ()=>$("overlay-import").classList.add("deschis"));
+$("btn-anuleaza-import").addEventListener("click", ()=>$("overlay-import").classList.remove("deschis"));
+$("btn-confirma-import").addEventListener("click", ()=>{
+  $("overlay-import").classList.remove("deschis");
+  let produse = null;
+  try{
+    const raw = localStorage.getItem("revanzari-date");
+    if(raw){ const parsat = JSON.parse(raw); produse = parsat.produse || null; }
+  }catch(e){}
+  if(!produse || !produse.length){
+    arataToast("Nu am găsit date de la Revânzări pe acest site.");
+    return;
+  }
+  pushUndo();
+  const s = foaieNoua("Produse Revânzări");
+  s.cols = 6; s.rows = Math.max(20, produse.length+3);
+  s.data["A1"]="Produs"; s.data["B1"]="Achiziție"; s.data["C1"]="Vânzare"; s.data["D1"]="Bucăți"; s.data["E1"]="Stoc"; s.data["F1"]="Profit";
+  produse.forEach((p,i)=>{
+    const r = i+2;
+    s.data["A"+r] = p.nume || "Produs";
+    s.data["B"+r] = String(p.pretAchizitie ?? 0);
+    s.data["C"+r] = String(p.pretVanzare ?? 0);
+    s.data["D"+r] = String(p.cantitate ?? 1);
+    s.data["E"+r] = String(p.stoc ?? 0);
+    s.data["F"+r] = `=(C${r}-B${r})*D${r}`;
+  });
+  const ultim = produse.length+2;
+  s.data["A"+(ultim+1)] = "Total profit";
+  s.data["F"+(ultim+1)] = `=SUM(F2:F${ultim})`;
+  // aspect: antet aldin cu fundal verde, prețurile și profitul în lei
+  ["A","B","C","D","E","F"].forEach(l=>{ s.fmt[l+"1"] = { b:1, bg:"g" }; });
+  for(let r=2;r<=ultim+1;r++){ ["B","C","F"].forEach(l=>{ if(r<=ultim || l==="F") s.fmt[l+r] = { nf:"lei", dec:2 }; }); }
+  s.fmt["A"+(ultim+1)] = { b:1 };
+  s.fmt["F"+(ultim+1)] = { b:1, nf:"lei", dec:2 };
+  store.sheets.push(s); store.activ = s.id; sel = {col:0,row:0};
+  salveaza(); randareTot();
+  arataToast(`✓ Importate ${produse.length} produse`);
+});
+
+/* ---------- ghid formule ---------- */
+$("btn-ghid").addEventListener("click", ()=>$("overlay-ghid").classList.add("deschis"));
+$("btn-inchide-ghid").addEventListener("click", ()=>$("overlay-ghid").classList.remove("deschis"));
+
+/* ---------- salvare la ieșire din aplicație ---------- */
+document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState === "hidden") salveaza(); });
+window.addEventListener("pagehide", salveaza);
+
+if("serviceWorker" in navigator){
+  window.addEventListener("load", ()=>{ navigator.serviceWorker.register("./sw.js").catch(()=>{}); });
+}
+
+incarca();
+randareTot();
+</script>
+</body>
+</html>

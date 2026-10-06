@@ -1,0 +1,32 @@
+{
+  "name": "Tabele — Mini foaie de calcul",
+  "short_name": "Tabele",
+  "description": "Foi de calcul simple, cu formule, direct pe telefon.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#EFF6F2",
+  "theme_color": "#EFF6F2",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "lang": "ro"
+}
