@@ -1,1128 +1,426 @@
 <!DOCTYPE html>
 <html lang="ro">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<meta name="theme-color" content="#EFF6F2" id="meta-theme-color">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#14213d">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Tabele">
-<link rel="manifest" href="./manifest.json">
-<link rel="apple-touch-icon" href="./apple-touch-icon.png">
-<title>Tabele</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Antrenament și kcal</title>
 <style>
-:root{
-  --bg:#EFF6F2; --ink:#10261D; --ink-soft:#5C7A6C; --ink-faded:#9FB8AC;
-  --card-bg:#FFFFFF; --card-border:#D7E8DE; --head-bg:#DCEEE4;
-  --accent:#2E7D61; --accent-ink:#FFFFFF;
-  --footer-bg:#10261D; --footer-text:#EFF6F2;
-  --danger:#D9402F; --divider:#D7E8DE; --search-bg:#E2F0E8;
-  --sel:#2E7D6133;
-}
-@media (prefers-color-scheme: dark){
-  :root{
-    --bg:#0E1713; --ink:#E7F3EC; --ink-soft:#8FAC9D; --ink-faded:#4C6559;
-    --card-bg:#162620; --card-border:#24392F; --head-bg:#1C3228;
-    --accent:#4CAF86; --accent-ink:#06130D;
-    --footer-bg:#000000; --footer-text:#E7F3EC;
-    --danger:#E5776F; --divider:#24392F; --search-bg:#1C3228;
-    --sel:#4CAF8633;
-  }
-}
-*{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-html,body{ height:100%; overflow:hidden; overscroll-behavior:none; width:100%; position:fixed; top:0; left:0; margin:0; padding:0; }
-body{
-  font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',sans-serif;
-  background:var(--bg); color:var(--ink); -webkit-font-smoothing:antialiased;
-  display:flex; flex-direction:column; padding-top:env(safe-area-inset-top,0px);
-}
-
-/* ---------- header ---------- */
-header{
-  padding:10px 14px 8px;
-  padding-left:calc(env(safe-area-inset-left,0px) + 14px);
-  padding-right:calc(env(safe-area-inset-right,0px) + 14px);
-  flex-shrink:0;
-}
-.h-sus{ display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; gap:8px; flex-wrap:wrap; }
-.h-titlu{ font-size:22px; font-weight:800; margin:0; }
-.h-butoane{ display:flex; gap:7px; }
-.icon-btn{
-  display:flex; align-items:center; justify-content:center; background:var(--card-bg); border:1px solid var(--card-border);
-  border-radius:50%; width:34px; height:34px; font-size:15px; flex-shrink:0; color:var(--ink);
-}
-.tabs-foi{ display:flex; gap:6px; overflow-x:auto; padding-bottom:2px; -webkit-overflow-scrolling:touch; }
-.tabs-foi::-webkit-scrollbar{ display:none; }
-.tab-foaie{
-  flex-shrink:0; padding:8px 14px; border-radius:18px; border:1px solid var(--card-border); background:var(--card-bg);
-  color:var(--ink-soft); font-family:inherit; font-size:13.5px; font-weight:600; white-space:nowrap;
-}
-.tab-foaie.on{ background:var(--accent); color:var(--accent-ink); border-color:var(--accent); }
-.tab-foaie-add{
-  flex-shrink:0; width:34px; height:34px; border-radius:50%; border:1px dashed var(--card-border); background:transparent;
-  color:var(--ink-soft); font-size:17px; display:flex; align-items:center; justify-content:center;
-}
-
-/* ---------- bara de formule ---------- */
-.formula-bar{
-  display:flex; align-items:center; gap:8px; padding:8px 14px;
-  padding-left:calc(env(safe-area-inset-left,0px) + 14px);
-  padding-right:calc(env(safe-area-inset-right,0px) + 14px);
-  border-top:1px solid var(--divider); border-bottom:1px solid var(--divider);
-  background:var(--card-bg); flex-shrink:0;
-}
-.fx-ref{
-  flex-shrink:0; min-width:40px; text-align:center; font-size:13px; font-weight:800; color:var(--accent);
-  background:var(--search-bg); border-radius:8px; padding:7px 6px;
-}
-.fx-input{
-  flex:1; min-width:0; border:none; outline:none; background:transparent; color:var(--ink);
-  font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:15px; padding:6px 2px;
-}
-.fx-input::placeholder{ color:var(--ink-faded); font-family:inherit; }
-
-/* ---------- grila ---------- */
-#grid-wrap{ flex:1; min-height:0; overflow:auto; -webkit-overflow-scrolling:touch; background:var(--bg); }
-table.grid{ border-collapse:collapse; table-layout:fixed; }
-table.grid th, table.grid td{
-  border:1px solid var(--card-border); padding:0; height:34px;
-}
-th.col-head{
-  position:sticky; top:0; z-index:3; background:var(--head-bg); color:var(--ink-soft);
-  font-size:12px; font-weight:700; width:92px; min-width:92px;
-}
-th.corner{ position:sticky; top:0; left:0; z-index:4; background:var(--head-bg); width:40px; min-width:40px; }
-th.row-head{
-  position:sticky; left:0; z-index:2; background:var(--head-bg); color:var(--ink-soft);
-  font-size:12px; font-weight:700; width:40px; min-width:40px; text-align:center;
-}
-td.cell{ background-color:var(--cbg,var(--card-bg)); width:92px; min-width:92px; position:relative; }
-td.cell.sel{ outline:2px solid var(--accent); outline-offset:-2px; background-image:linear-gradient(var(--sel),var(--sel)); }
-.cell-val{
-  width:100%; height:100%; display:flex; align-items:center; padding:0 7px;
-  font-size:13.5px; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-}
-.cell-val.num{ justify-content:flex-end; font-variant-numeric:tabular-nums; }
-.cell-val.err{ color:var(--danger); font-weight:700; }
-.cell-val.b{ font-weight:800; }
-.add-rc{ display:flex; align-items:center; justify-content:center; color:var(--ink-faded); font-size:16px; background:var(--search-bg); cursor:pointer; }
-
-/* ---------- overlay-uri ---------- */
-.overlay-fundal{ position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:50; display:none; align-items:flex-end; justify-content:center; }
-.overlay-fundal.deschis{ display:flex; }
-.card-jos{
-  background:var(--card-bg); width:100%; max-width:520px; border-radius:16px 16px 0 0;
-  padding:16px 16px calc(env(safe-area-inset-bottom,0px) + 16px); box-shadow:0 -6px 24px rgba(0,0,0,.2);
-  max-height:75vh; overflow-y:auto;
-}
-.card-jos h3{ margin:0 0 12px; font-size:17px; text-align:center; }
-.card-jos input[type="text"]{
-  width:100%; border:1px solid var(--card-border); background:var(--search-bg); border-radius:12px;
-  padding:12px 14px; font-family:inherit; font-size:16px; color:var(--ink); margin-bottom:10px;
-}
-.card-jos button.actiune{
-  width:100%; padding:13px; border:none; border-radius:12px; background:var(--search-bg); color:var(--ink);
-  font-family:inherit; font-size:15px; font-weight:600; margin-bottom:8px; text-align:left; padding-left:16px;
-}
-.card-jos button.principal{ background:var(--accent); color:var(--accent-ink); text-align:center; padding-left:13px; }
-.card-jos button.pericol{ color:var(--danger); }
-.meta-txt{ font-size:12.5px; color:var(--ink-soft); margin:0 0 12px; text-align:center; }
-
-#toast{
-  position:fixed; left:50%; bottom:calc(env(safe-area-inset-bottom,0px) + 20px); transform:translateX(-50%) translateY(14px);
-  z-index:90; background:var(--footer-bg); color:var(--footer-text); font-size:13.5px; font-weight:600;
-  padding:10px 16px; border-radius:30px; box-shadow:0 6px 20px rgba(0,0,0,.25); opacity:0; pointer-events:none;
-  transition:opacity .2s, transform .2s; max-width:88%; text-align:center;
-}
-#toast.vizibil{ opacity:1; transform:translateX(-50%) translateY(0); }
-
-/* ---------- ghid formule ---------- */
-.ghid-grup{ margin-bottom:16px; }
-.ghid-grup h4{ margin:0 0 8px; font-size:13px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.03em; }
-.ghid-item{ background:var(--search-bg); border-radius:12px; padding:10px 12px; margin-bottom:8px; }
-.ghid-item code{
-  display:inline-block; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:13.5px; font-weight:700;
-  color:var(--accent); background:var(--card-bg); padding:2px 7px; border-radius:6px; margin-bottom:4px;
-}
-.ghid-item p{ margin:0; font-size:13px; color:var(--ink-soft); line-height:1.4; }
-
-/* ---------- anulare, formatare ---------- */
-.icon-btn:disabled{ opacity:.35; }
-.fx-fmt{ width:38px; height:34px; border-radius:10px; font-size:14px; font-weight:800; color:var(--accent); }
-.fmt-eticheta{ font-size:12px; font-weight:700; color:var(--ink-soft); margin:14px 0 6px; }
-.seg{ display:flex; gap:6px; }
-.seg button{
-  flex:1; padding:11px 6px; border-radius:12px; border:1px solid var(--card-border); background:var(--search-bg);
-  color:var(--ink); font-family:inherit; font-size:14px; font-weight:600;
-}
-.seg button.on{ background:var(--accent); color:var(--accent-ink); border-color:var(--accent); }
-.stepper{ display:flex; align-items:center; gap:10px; }
-.stepper button{
-  width:44px; height:40px; border-radius:12px; border:1px solid var(--card-border); background:var(--search-bg);
-  color:var(--ink); font-size:20px; font-weight:700; font-family:inherit;
-}
-.stepper span{ min-width:48px; text-align:center; font-size:15px; font-weight:700; font-variant-numeric:tabular-nums; }
-.swatches{ display:flex; gap:10px; flex-wrap:wrap; margin-bottom:14px; }
-.swatches button{
-  width:38px; height:38px; border-radius:50%; border:1px solid var(--card-border); padding:0;
-  background:linear-gradient(var(--sw,transparent),var(--sw,transparent)), var(--card-bg); color:var(--ink-soft); font-size:14px;
-}
-.swatches button.sw-none{ background:var(--card-bg); }
-.swatches button.on{ outline:3px solid var(--accent); outline-offset:2px; }
+:root,[data-t="ocean"]{--bg:#eaf2fb;--card:#fff;--ink:#0f2742;--mute:#5f7690;--line:#d6e3f1;--acc:#1d6fe8;--hi:#ffc833;--ok:#14a76c;--bad:#e04b4b;--grad:linear-gradient(135deg,#1d6fe8,#4fb3ff)}
+[data-t="padure"]{--bg:#eef5ee;--card:#fff;--ink:#12301f;--mute:#5d7a66;--line:#d5e4d6;--acc:#1f9d55;--ok:#1f9d55;--grad:linear-gradient(135deg,#1f9d55,#7bd88f)}
+[data-t="apus"]{--bg:#fbf0f3;--card:#fff;--ink:#3a1730;--mute:#8a6479;--line:#f0d9e1;--acc:#d6336c;--ok:#16a085;--grad:linear-gradient(135deg,#d6336c,#ff8a5c)}
+[data-t="noapte"]{--bg:#0e1626;--card:#17233b;--ink:#eaf0fb;--mute:#93a3c2;--line:#2a3a5a;--acc:#6f95ff;--ok:#3ccf82;--bad:#ff7a7a;--grad:linear-gradient(135deg,#3d6bff,#8a5cff)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,sans-serif;padding-top:env(safe-area-inset-top)}
+main{max-width:560px;margin:0 auto;padding:16px 16px 100px}
+h1,h2{margin:0;line-height:1.05;font-weight:800;letter-spacing:-.5px}
+h1{font-size:30px}h2{font-size:24px}
+select,input,button{font:inherit;color:inherit}
+select,input[type=text],input[type=number],input:not([type]){padding:11px;border:1.5px solid var(--line);border-radius:10px;background:var(--card);min-width:0;width:100%}
+.mute{color:var(--mute)}
+.card{background:var(--card);border:1.5px solid var(--line);border-radius:12px;padding:14px;margin-bottom:10px}
+.row{display:flex;align-items:center;gap:10px}
+.sp{flex:1}
+.big{font-size:44px;font-weight:800;letter-spacing:-1px;line-height:1}
+.bar{height:8px;background:var(--line);border-radius:4px;overflow:hidden;margin:10px 0 4px}
+.bar b{display:block;height:100%;background:var(--ok);transition:width .25s}
+.bar.over b{background:var(--bad)}
+.btn{border:0;border-radius:10px;background:var(--acc);color:#fff;font-weight:600;padding:12px 16px;cursor:pointer}
+.btn.alt{background:var(--card);color:var(--ink);border:1.5px solid var(--line)}
+.x{border:0;background:none;color:var(--mute);font-size:22px;padding:4px 8px;cursor:pointer}
+.week{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin:14px 0}
+.day{border:1.5px solid var(--line);background:var(--card);border-radius:10px;padding:8px 0;text-align:center;cursor:pointer;font-weight:600}
+.day i{display:block;width:8px;height:8px;border-radius:50%;background:var(--line);margin:4px auto 0}
+.day.rest{opacity:.55}.day.has i{background:var(--acc)}.day.full i{background:var(--ok)}
+.day.sel{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.ex{display:flex;align-items:center;gap:12px;background:var(--card);border:1.5px solid var(--line);border-radius:12px;padding:12px;margin-bottom:8px}
+.ex input[type=checkbox]{width:26px;height:26px;accent-color:var(--ok);flex:none}
+.ex.done .n{text-decoration:line-through;color:var(--mute)}
+.kg{width:76px!important;text-align:center;flex:none}
+.n{font-weight:600}.m{color:var(--mute);font-size:14px}
+.food{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--line);cursor:pointer;width:100%;background:none;border-left:0;border-right:0;border-top:0;text-align:left}
+.grid2{display:grid;grid-template-columns:1fr 100px;gap:8px;margin-top:10px}
+.pre{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:14px 0}
+.time{font-size:72px;font-weight:800;text-align:center;letter-spacing:-2px;font-variant-numeric:tabular-nums;margin:18px 0}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.seg .btn{background:var(--card);color:var(--ink);border:1.5px solid var(--line)}
+.seg .btn.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+nav{position:fixed;left:0;right:0;bottom:0;display:grid;grid-template-columns:repeat(4,1fr);background:var(--card);border-top:1.5px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
+nav button{border:0;background:none;padding:10px 0 8px;font-size:12px;font-weight:600;color:var(--mute);cursor:pointer}
+nav button b{display:block;font-size:20px;line-height:1.2}
+nav button.on{color:var(--acc)}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--hi);outline-offset:2px}
+.card,.ex,.day{border:0;box-shadow:0 2px 10px rgba(20,40,70,.08)}
+.card{border-radius:18px;padding:16px}.ex{border-radius:14px}.day{border-radius:12px}
+.day.sel,.seg .btn.on{background:var(--acc);color:#fff}
+.btn{border-radius:12px}h1{font-size:32px}
+.hero{background:var(--grad);color:#fff}.hero .mute{color:rgba(255,255,255,.85)}
+.hero .bar{background:rgba(255,255,255,.3)}.hero .bar b{background:#fff}.hero .bar.over b{background:#ffd54d}
+.hero .btn.alt{background:rgba(255,255,255,.2);color:#fff;box-shadow:none}
+nav{border-top:0;box-shadow:0 -4px 18px rgba(20,40,70,.12);border-radius:18px 18px 0 0}
+.th{width:44px;height:44px;border-radius:50%;border:3px solid transparent;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.25)}
+.th.on{border-color:var(--ink)}
+#thm{position:fixed;top:calc(10px + env(safe-area-inset-top));right:14px;z-index:5;width:42px;height:42px;border-radius:50%;border:0;background:var(--card);box-shadow:0 2px 10px rgba(20,40,70,.18);font-size:20px;cursor:pointer;padding:0}
+#thp{position:fixed;top:calc(60px + env(safe-area-inset-top));right:14px;z-index:5;display:flex;gap:10px;background:var(--card);padding:12px;border-radius:16px;box-shadow:0 6px 24px rgba(20,40,70,.25)}
+#thp[hidden]{display:none}
+main{padding-top:20px}h1{padding-right:56px}
+.ex.done{background:#E1F5EE;color:#085041}.ex.done .m,.ex.done .n{color:#0F6E56}
 </style>
 </head>
 <body>
-
-<header>
-  <div class="h-sus">
-    <h1 class="h-titlu">Tabele</h1>
-    <div class="h-butoane">
-      <button class="icon-btn" id="btn-undo" aria-label="Anulează" disabled>↶</button>
-      <button class="icon-btn" id="btn-redo" aria-label="Refă" disabled>↷</button>
-      <button class="icon-btn" id="btn-ghid" aria-label="Ghid formule">❓</button>
-      <button class="icon-btn" id="btn-import" aria-label="Importă din Revânzări">📥</button>
-      <button class="icon-btn" id="btn-meniu-foaie" aria-label="Opțiuni foaie">⋯</button>
-    </div>
-  </div>
-  <div class="tabs-foi" id="tabs-foi"></div>
-</header>
-
-<div class="formula-bar">
-  <div class="fx-ref" id="fx-ref">A1</div>
-  <input type="text" class="fx-input" id="fx-input" placeholder="Valoare sau =formulă">
-  <button class="icon-btn fx-fmt" id="btn-format" aria-label="Formatare celulă">Aa</button>
-</div>
-
-<div id="grid-wrap"><table class="grid" id="grid"></table></div>
-
-<div id="toast"></div>
-
-<div class="overlay-fundal" id="overlay-foaie">
-  <div class="card-jos">
-    <h3>Foaie</h3>
-    <input type="text" id="input-nume-foaie" placeholder="Nume foaie">
-    <button class="actiune principal" id="btn-redenumeste">Redenumește</button>
-    <button class="actiune" id="btn-duplica">Duplică foaia</button>
-    <button class="actiune" id="btn-export-csv">Exportă CSV (Excel / WhatsApp)</button>
-    <button class="actiune pericol" id="btn-sterge-foaie">Șterge foaia</button>
-    <button class="actiune" id="btn-inchide-meniu">Închide</button>
-  </div>
-</div>
-
-<div class="overlay-fundal" id="overlay-format">
-  <div class="card-jos">
-    <h3>Formatare · <span id="fmt-ref">A1</span></h3>
-    <div class="fmt-eticheta">Se aplică pe</div>
-    <div class="seg" id="seg-scop">
-      <button data-scop="cel">Celulă</button>
-      <button data-scop="rand">Tot rândul</button>
-      <button data-scop="col">Toată coloana</button>
-    </div>
-    <div class="fmt-eticheta">Text</div>
-    <div class="seg"><button id="fmt-bold"><b>B</b> Aldin</button></div>
-    <div class="fmt-eticheta">Număr</div>
-    <div class="seg" id="seg-nf">
-      <button data-nf="auto">Automat</button>
-      <button data-nf="num">Număr</button>
-      <button data-nf="lei">Lei</button>
-    </div>
-    <div class="fmt-eticheta">Zecimale</div>
-    <div class="stepper">
-      <button id="dec-minus" aria-label="Mai puține zecimale">−</button>
-      <span id="dec-val">auto</span>
-      <button id="dec-plus" aria-label="Mai multe zecimale">+</button>
-    </div>
-    <div class="fmt-eticheta">Culoare fundal</div>
-    <div class="swatches" id="swatches"></div>
-    <button class="actiune principal" id="btn-inchide-format">Gata</button>
-  </div>
-</div>
-
-<div class="overlay-fundal" id="overlay-import">
-  <div class="card-jos">
-    <h3>Importă din Revânzări</h3>
-    <p class="meta-txt">Aduce produsele din aplicația Revânzări (dacă e găzduită pe același site) ca o foaie nouă, cu formule gata puse pentru profit. E un instantaneu — nu se actualizează singur după import.</p>
-    <button class="actiune principal" id="btn-confirma-import">Importă acum</button>
-    <button class="actiune" id="btn-anuleaza-import">Anulează</button>
-  </div>
-</div>
-
-<div class="overlay-fundal" id="overlay-ghid">
-  <div class="card-jos">
-    <h3>Ghid formule</h3>
-    <p class="meta-txt">Apasă pe o celulă, scrie în bara de sus. O formulă începe mereu cu <code>=</code>. Argumentele se separă cu <code>;</code> (merge și virgula). Dacă folosești <code>;</code>, poți scrie zecimale cu virgulă: <code>=A1*1,5</code>.</p>
-
-    <div class="ghid-grup">
-      <h4>De bază</h4>
-      <div class="ghid-item"><code>=A1+B1</code><p>Adună conținutul a două celule.</p></div>
-      <div class="ghid-item"><code>=A1-B1</code><p>Scade B1 din A1.</p></div>
-      <div class="ghid-item"><code>=A1*B1</code><p>Înmulțește — util pentru preț × cantitate.</p></div>
-      <div class="ghid-item"><code>=A1/B1</code><p>Împarte A1 la B1.</p></div>
-      <div class="ghid-item"><code>=A1^2</code><p>Ridică la putere (aici, pătratul lui A1).</p></div>
-      <div class="ghid-item"><code>=A1*10%</code><p>Procent: 10% înseamnă 0,1. Ex. <code>=A1*19%</code> pentru TVA.</p></div>
-      <div class="ghid-item"><code>=(A1+B1)*2</code><p>Parantezele schimbă ordinea calculului, ca la matematică.</p></div>
-    </div>
-
-    <div class="ghid-grup">
-      <h4>Funcții pe mai multe celule</h4>
-      <div class="ghid-item"><code>=SUM(A1:A10)</code><p>Adună tot ce e între A1 și A10. Celulele goale și textul sunt ignorate.</p></div>
-      <div class="ghid-item"><code>=AVERAGE(A1:A10)</code><p>Media celulelor cu număr din interval.</p></div>
-      <div class="ghid-item"><code>=COUNT(A1:A10)</code><p>Câte celule din interval conțin un număr.</p></div>
-      <div class="ghid-item"><code>=COUNTA(A1:A10)</code><p>Câte celule din interval nu sunt goale (număr sau text).</p></div>
-      <div class="ghid-item"><code>=MIN(A1:A10)</code> / <code>=MAX(A1:A10)</code><p>Cea mai mică, respectiv cea mai mare valoare din interval.</p></div>
-      <div class="ghid-item"><code>=PRODUCT(A1:A3)</code><p>Înmulțește toate numerele din interval între ele.</p></div>
-    </div>
-
-    <div class="ghid-grup">
-      <h4>Condiții și rotunjire</h4>
-      <div class="ghid-item"><code>=IF(A1&gt;=100;"mare";"mic")</code><p>Dacă A1 e cel puțin 100 scrie „mare”, altfel „mic”. Poți pune și numere sau formule în loc de text. Comparații: <code>=</code> <code>&lt;&gt;</code> <code>&lt;</code> <code>&gt;</code> <code>&lt;=</code> <code>&gt;=</code></p></div>
-      <div class="ghid-item"><code>=ROUND(A1;2)</code><p>Rotunjește la 2 zecimale. <code>=ROUND(A1;0)</code> rotunjește la întreg.</p></div>
-      <div class="ghid-item"><code>=SUMIF(A2:A20;"cafea";C2:C20)</code><p>Adună valorile din C acolo unde în A scrie „cafea”. Merge și cu condiții ca <code>"&gt;10"</code> sau <code>"&lt;&gt;0"</code>.</p></div>
-      <div class="ghid-item"><code>=COUNTIF(B2:B20;"&gt;0")</code><p>Numără celulele din interval care îndeplinesc condiția.</p></div>
-    </div>
-
-    <div class="ghid-grup">
-      <h4>Exemple pentru muncă</h4>
-      <div class="ghid-item"><code>=B2*C2</code><p>Total pe un rând: preț unitar (B2) × cantitate (C2).</p></div>
-      <div class="ghid-item"><code>=SUM(D2:D20)</code><p>Totalul unei coloane întregi de cheltuieli sau ore lucrate.</p></div>
-      <div class="ghid-item"><code>=ROUND(B2*1,19;2)</code><p>Preț cu TVA, rotunjit la bani.</p></div>
-    </div>
-
-    <div class="ghid-grup">
-      <h4>Aspect și anulare</h4>
-      <div class="ghid-item"><code>Aa</code><p>Din dreapta barei de formule: aldin, lei, număr de zecimale și culoare de fundal — pentru o celulă, un rând (ex. antetul) sau o coloană.</p></div>
-      <div class="ghid-item"><code>↶ ↷</code><p>Anulează sau refă ultima modificare, inclusiv ștergeri de rânduri, coloane sau foi.</p></div>
-    </div>
-
-    <div class="ghid-grup">
-      <h4>Când vezi o eroare</h4>
-      <div class="ghid-item"><code>#ERR</code><p>Formula are o problemă: împarte la zero, are o greșeală de scriere sau folosește text într-un calcul (<code>=A1+B1</code> cu text în A1). Dacă ștergi o celulă la care se referă formula, în bară vei vedea <code>#REF</code>.</p></div>
-      <div class="ghid-item"><code>#CIRC</code><p>Referință circulară — o celulă depinde, direct sau indirect, chiar de ea însăși.</p></div>
-    </div>
-
-    <button class="actiune principal" id="btn-inchide-ghid">Am înțeles</button>
-  </div>
-</div>
-
+<button id="thm" aria-label="Alege tema" title="Temă">🎨</button><div id="thp" hidden></div>
+<main id="v"></main>
+<nav id="nav"></nav>
 <script>
-const $ = (id)=>document.getElementById(id);
-const CHEIE = "tabele-date";
-const NUM_RE = /^-?\d+([.,]\d+)?$/;
-const esteEroare = (v)=> v==="#ERR" || v==="#CIRC";
+var Z=["L","Ma","Mi","J","V","S","D"],ZN=["Luni","Marți","Miercuri","Joi","Vineri","Sâmbătă","Duminică"];
+var MEALS=["Mic dejun","Prânz","Cină","Gustări"];
+var FOODS=[["Ou fiert",78,6,1,5],["Pâine integrală, felie",80,4,14,1],["Piept de pui la grătar, 100 g",165,31,0,4],["Orez fiert, 100 g",130,3,28,0],["Paste fierte, 100 g",158,6,31,1],["Cartofi fierți, 100 g",87,2,20,0],["Iaurt grecesc, 150 g",130,15,6,5],["Banană",105,1,27,0],["Măr",80,0,21,0],["Ovăz, 50 g",190,7,33,4],["Lapte, 250 ml",120,8,12,5],["Brânză de vaci, 100 g",98,11,3,4],["Somon, 100 g",208,20,0,13],["Sarmale, 1 buc",110,6,8,6],["Mămăligă, 100 g",70,2,15,0],["Ciorbă de legume, bol",120,3,18,4],["Salată de roșii cu castraveți",70,2,8,4],["Banană cu unt de arahide",290,8,35,14],["Cafea cu lapte",60,3,6,3],["Pizza, felie",270,11,33,10],["Ciocolată, 20 g",110,2,11,7],["Nuci, 30 g",196,5,4,20]];
+var PLANS={
+ full:{name:"Corp întreg, 3 zile",days:{0:["Corp întreg A",[["Genuflexiuni cu bara",4,"8"],["Împins la bancă",4,"8"],["Ramat cu haltera",3,"10"],["Împins deasupra capului",3,"10"],["Plank",3,"45 s"]]],2:["Corp întreg B",[["Îndreptări românești",4,"8"],["Tracțiuni",3,"max"],["Fandări",3,"10"],["Flotări înclinate",3,"12"],["Ridicări de picioare",3,"12"]]],4:["Corp întreg C",[["Presa pentru picioare",4,"10"],["Împins cu gantere",3,"10"],["Ramat la cablu",3,"12"],["Ridicări laterale",3,"15"],["Abdomene",3,"15"]]]}},
+ ppl:{name:"Împins / Tras / Picioare",days:{0:["Împins",[["Împins la bancă",4,"8"],["Împins înclinat cu gantere",3,"10"],["Împins deasupra capului",3,"10"],["Extensii triceps",3,"12"]]],2:["Tras",[["Tracțiuni",4,"max"],["Ramat cu haltera",4,"8"],["Tragere la piept",3,"12"],["Flexii biceps",3,"12"]]],4:["Picioare",[["Genuflexiuni cu bara",4,"8"],["Îndreptări românești",3,"10"],["Fandări",3,"10"],["Ridicări pe vârfuri",4,"15"]]]}},
+ home:{name:"Acasă, fără echipament",days:{0:["Partea de sus",[["Flotări",4,"12"],["Flotări pentru triceps",3,"10"],["Plank cu atingerea umărului",3,"20"],["Superman",3,"15"]]],1:["Picioare",[["Genuflexiuni",4,"20"],["Fandări alternative",3,"12"],["Pod pentru fesieri",3,"15"],["Ridicări pe vârfuri",3,"20"]]],3:["Abdomen și cardio",[["Jumping jacks",4,"40 s"],["Genunchi la piept",4,"30 s"],["Bicicletă din culcat",3,"20"],["Plank",3,"45 s"]]],5:["Corp întreg",[["Burpees",4,"10"],["Genuflexiuni cu săritură",3,"12"],["Flotări",3,"max"],["Alpiniști",3,"30 s"]]]}}};
+function X(t){return t.split(";").map(function(q){var a=q.split("|");return[a[0],+a[1],a[2]]})}
+var LIB={
+"Piept":X("Împins la bancă|4|8;Împins înclinat cu gantere|3|10;Împins la bancă declinat|3|10;Fluturări cu gantere|3|12;Fluturări la cablu|3|12;Împins la aparat|3|12;Dips pentru piept|3|10;Flotări|3|12"),
+"Spate":X("Tracțiuni|4|max;Ramat cu haltera|4|8;Tragere la piept|3|12;Ramat cu ganteră|3|10;Ramat la cablu|3|12;Ramat la T-bar|3|10;Pullover cu ganteră|3|12;Îndreptări|3|6;Hiperextensii|3|12"),
+"Umeri":X("Împins deasupra capului|4|8;Arnold press|3|10;Ridicări laterale|4|15;Ridicări frontale|3|12;Fluturări pentru umărul din spate|3|15;Face pull|3|15;Tragere la bărbie|3|12;Ridicări de umeri|3|15"),
+"Biceps":X("Flexii cu haltera|3|10;Flexii cu gantere alternativ|3|12;Flexii ciocan|3|12;Flexii la bancă Scott|3|10;Flexii la cablu|3|12;Flexii concentrate|3|12"),
+"Triceps":X("Extensii la scripete|3|12;Extensii franceze|3|10;Împins cu priză îngustă|3|10;Dips la bancă|3|12;Extensii cu ganteră peste cap|3|12;Kickback cu ganteră|3|12"),
+"Picioare":X("Genuflexiuni cu bara|4|8;Presa pentru picioare|4|10;Genuflexiuni bulgare|3|10;Fandări|3|10;Îndreptări românești|3|10;Extensii picioare la aparat|3|12;Flexii picioare la aparat|3|12;Goblet squat|3|12;Ridicări pe vârfuri|4|15"),
+"Fesieri":X("Hip thrust|4|10;Pod pentru fesieri|3|15;Fandări înapoi|3|10;Genuflexiuni sumo|3|12;Abducții la cablu|3|15;Îndreptări românești cu gantere|3|10;Pas lateral cu bandă|3|15"),
+"Abdomen":X("Plank|3|45 s;Abdomene|3|15;Ridicări de picioare|3|12;Rotiri ruse|3|20;Bicicletă din culcat|3|20;Alpiniști|3|30 s;Crunch la cablu|3|15;Roată abdominală|3|10"),
+"Cardio":X("Mers rapid|1|30 min;Alergare ușoară|1|20 min;Bicicletă|1|30 min;Intervale pe bandă|8|1 min;Săritura corzii|4|1 min;Jumping jacks|4|40 s;Burpees|4|10")};
+PLANS.split5={name:"Pe grupe musculare, 5 zile",days:{
+0:["Piept",X("Împins la bancă|4|8;Împins înclinat cu gantere|3|10;Fluturări la cablu|3|12;Dips pentru piept|3|10;Flotări|3|max")],
+1:["Spate",X("Tracțiuni|4|max;Ramat cu haltera|4|8;Tragere la piept|3|12;Ramat cu ganteră|3|10;Hiperextensii|3|12")],
+2:["Umeri",X("Împins deasupra capului|4|8;Ridicări laterale|4|15;Fluturări pentru umărul din spate|3|15;Face pull|3|15;Ridicări de umeri|3|15")],
+3:["Brațe: biceps și triceps",X("Flexii cu haltera|3|10;Flexii ciocan|3|12;Împins cu priză îngustă|3|10;Extensii la scripete|3|12;Extensii franceze|3|10")],
+4:["Picioare",X("Genuflexiuni cu bara|4|8;Presa pentru picioare|4|10;Îndreptări românești|3|10;Extensii picioare la aparat|3|12;Ridicări pe vârfuri|4|15")]}};
+PLANS.pt3={name:"Piept+triceps, spate+biceps, picioare+umeri",days:{
+0:["Piept și triceps",X("Împins la bancă|4|8;Împins înclinat cu gantere|3|10;Fluturări la cablu|3|12;Împins cu priză îngustă|3|10;Extensii la scripete|3|12")],
+2:["Spate și biceps",X("Tracțiuni|4|max;Ramat cu haltera|4|8;Tragere la piept|3|12;Flexii cu haltera|3|10;Flexii ciocan|3|12")],
+4:["Picioare și umeri",X("Genuflexiuni cu bara|4|8;Presa pentru picioare|3|10;Îndreptări românești|3|10;Împins deasupra capului|3|10;Ridicări laterale|3|15")]}};
+PLANS.ul4={name:"Sus / Jos, 4 zile",days:{
+0:["Sus A",X("Împins la bancă|4|8;Ramat cu haltera|4|8;Împins deasupra capului|3|10;Flexii cu haltera|3|10;Extensii la scripete|3|12")],
+1:["Jos A",X("Genuflexiuni cu bara|4|8;Îndreptări românești|3|10;Fandări|3|10;Ridicări pe vârfuri|4|15;Plank|3|45 s")],
+3:["Sus B",X("Împins înclinat cu gantere|4|10;Tracțiuni|4|max;Ridicări laterale|3|15;Flexii ciocan|3|12;Extensii franceze|3|10")],
+4:["Jos B",X("Presa pentru picioare|4|10;Hip thrust|4|10;Flexii picioare la aparat|3|12;Genuflexiuni bulgare|3|10;Ridicări de picioare|3|12")]}};
+PLANS.ppl6={name:"Împins / Tras / Picioare, 6 zile",days:{
+0:["Împins A",X("Împins la bancă|4|8;Împins deasupra capului|3|10;Împins înclinat cu gantere|3|10;Ridicări laterale|3|15;Extensii la scripete|3|12")],
+1:["Tras A",X("Tracțiuni|4|max;Ramat cu haltera|4|8;Tragere la piept|3|12;Face pull|3|15;Flexii cu haltera|3|10")],
+2:["Picioare A",X("Genuflexiuni cu bara|4|8;Îndreptări românești|3|10;Presa pentru picioare|3|12;Flexii picioare la aparat|3|12;Ridicări pe vârfuri|4|15")],
+3:["Împins B",X("Împins înclinat cu gantere|4|10;Arnold press|3|10;Fluturări la cablu|3|12;Dips la bancă|3|12;Extensii franceze|3|10")],
+4:["Tras B",X("Ramat cu ganteră|4|10;Ramat la cablu|3|12;Tragere la piept|3|12;Fluturări pentru umărul din spate|3|15;Flexii ciocan|3|12")],
+5:["Picioare B",X("Presa pentru picioare|4|10;Genuflexiuni bulgare|3|10;Hip thrust|3|10;Extensii picioare la aparat|3|12;Abdomene|3|15")]}};
+PLANS.fes={name:"Fesieri și picioare, 3 zile",days:{
+0:["Fesieri",X("Hip thrust|4|10;Îndreptări românești cu gantere|3|10;Fandări înapoi|3|10;Abducții la cablu|3|15;Pod pentru fesieri|3|15")],
+2:["Picioare",X("Genuflexiuni sumo|4|12;Presa pentru picioare|4|10;Genuflexiuni bulgare|3|10;Flexii picioare la aparat|3|12;Ridicări pe vârfuri|3|15")],
+4:["Fesieri și abdomen",X("Hip thrust|4|10;Pas lateral cu bandă|3|15;Fandări|3|10;Plank|3|45 s;Bicicletă din culcat|3|20")]}};
+PLANS.slab={name:"Slăbit: circuit și cardio, 4 zile",days:{
+0:["Circuit corp întreg",X("Genuflexiuni cu săritură|4|12;Flotări|4|12;Ramat cu ganteră|4|12;Burpees|4|10;Plank|3|45 s")],
+1:["Cardio ușor",X("Mers rapid|1|30 min;Bicicletă|1|20 min")],
+3:["Circuit picioare și abdomen",X("Fandări alternative|4|12;Hip thrust|4|12;Alpiniști|4|30 s;Rotiri ruse|3|20;Ridicări de picioare|3|12")],
+5:["Cardio cu intervale",X("Intervale pe bandă|8|1 min;Săritura corzii|4|1 min")]}};
+PLANS.gant={name:"Acasă cu gantere, 4 zile",days:{
+0:["Piept și triceps",X("Împins cu gantere|4|10;Fluturări cu gantere|3|12;Flotări|3|max;Extensii cu ganteră peste cap|3|12;Kickback cu ganteră|3|12")],
+1:["Spate și biceps",X("Ramat cu ganteră|4|10;Pullover cu ganteră|3|12;Flexii cu gantere alternativ|3|12;Flexii ciocan|3|12")],
+3:["Picioare",X("Goblet squat|4|12;Îndreptări românești cu gantere|3|10;Fandări|3|10;Pod pentru fesieri|3|15;Ridicări pe vârfuri|3|20")],
+4:["Umeri și abdomen",X("Arnold press|4|10;Ridicări laterale|3|15;Fluturări pentru umărul din spate|3|15;Plank|3|45 s;Bicicletă din culcat|3|20")]}};
+PLANS.incep={name:"Începător, 2 zile",days:{
+1:["Corp întreg A",X("Goblet squat|3|12;Împins la aparat|3|12;Tragere la piept|3|12;Plank|3|30 s")],
+4:["Corp întreg B",X("Presa pentru picioare|3|12;Ramat la cablu|3|12;Împins deasupra capului|3|10;Pod pentru fesieri|3|15")]}};
+var LG=null;
+var IMG={"Abdomene":["Crunches",2,"abdomen",""],"Alergare ușoară":["Jogging_Treadmill",2,"cvadricepși","fesieri, femurali"],"Alpiniști":["Mountain_Climbers",2,"cvadricepși","piept, femurali, umeri"],"Arnold press":["Arnold_Dumbbell_Press",2,"umeri","triceps"],"Bicicletă":["Bicycling_Stationary",2,"cvadricepși","gambe, fesieri, femurali"],"Bicicletă din culcat":["Air_Bike",2,"abdomen",""],"Crunch la cablu":["Cable_Crunch",2,"abdomen",""],"Dips la bancă":["Bench_Dips",2,"triceps","piept, umeri"],"Dips pentru piept":["Dips_-_Chest_Version",2,"piept","umeri, triceps"],"Extensii cu ganteră peste cap":["Standing_One-Arm_Dumbbell_Triceps_Extension",2,"triceps","piept, umeri"],"Extensii franceze":["EZ-Bar_Skullcrusher",2,"triceps","antebrațe"],"Extensii la scripete":["Triceps_Pushdown",2,"triceps",""],"Extensii picioare la aparat":["Leg_Extensions",2,"cvadricepși",""],"Extensii triceps":["Triceps_Pushdown",2,"triceps",""],"Face pull":["Face_Pull",2,"umeri","spate mijloc"],"Fandări":["Dumbbell_Lunges",2,"cvadricepși","gambe, fesieri, femurali"],"Fandări alternative":["Bodyweight_Walking_Lunge",2,"cvadricepși","gambe, fesieri, femurali"],"Fandări înapoi":["Dumbbell_Rear_Lunge",2,"cvadricepși","gambe, fesieri, femurali"],"Flexii biceps":["Dumbbell_Bicep_Curl",2,"biceps","antebrațe"],"Flexii ciocan":["Hammer_Curls",2,"biceps",""],"Flexii concentrate":["Concentration_Curls",2,"biceps","antebrațe"],"Flexii cu gantere alternativ":["Dumbbell_Alternate_Bicep_Curl",2,"biceps","antebrațe"],"Flexii cu haltera":["Barbell_Curl",2,"biceps","antebrațe"],"Flexii la bancă Scott":["Preacher_Curl",2,"biceps",""],"Flexii la cablu":["Standing_Biceps_Cable_Curl",2,"biceps",""],"Flexii picioare la aparat":["Lying_Leg_Curls",2,"femurali",""],"Flotări":["Pushups",2,"piept","umeri, triceps"],"Flotări pentru triceps":["Pushups_Close_and_Wide_Hand_Positions",2,"piept","umeri, triceps"],"Flotări înclinate":["Incline_Push-Up",2,"piept","umeri, triceps"],"Fluturări cu gantere":["Dumbbell_Flyes",2,"piept",""],"Fluturări la cablu":["Cable_Crossover",2,"piept","umeri"],"Fluturări pentru umărul din spate":["Reverse_Flyes",2,"umeri",""],"Genuflexiuni":["Bodyweight_Squat",2,"cvadricepși","fesieri, femurali"],"Genuflexiuni bulgare":["Split_Squat_with_Dumbbells",2,"cvadricepși","fesieri, femurali"],"Genuflexiuni cu bara":["Barbell_Full_Squat",2,"cvadricepși","gambe, fesieri, femurali, zona lombară"],"Genuflexiuni cu săritură":["Freehand_Jump_Squat",2,"cvadricepși","gambe, fesieri, femurali"],"Genuflexiuni sumo":["Plie_Dumbbell_Squat",2,"cvadricepși","abdomen, gambe, fesieri, femurali"],"Goblet squat":["Goblet_Squat",2,"cvadricepși","gambe, fesieri, femurali, umeri"],"Hip thrust":["Barbell_Hip_Thrust",2,"fesieri","gambe, femurali"],"Hiperextensii":["Hyperextensions_Back_Extensions",2,"zona lombară","fesieri, femurali"],"Intervale pe bandă":["Running_Treadmill",2,"cvadricepși","gambe, fesieri, femurali"],"Kickback cu ganteră":["Tricep_Dumbbell_Kickback",2,"triceps",""],"Mers rapid":["Walking_Treadmill",2,"cvadricepși","gambe, fesieri, femurali"],"Pas lateral cu bandă":["Monster_Walk",2,"abductori",""],"Plank":["Plank",2,"abdomen",""],"Pod pentru fesieri":["Butt_Lift_Bridge",2,"fesieri","femurali"],"Presa pentru picioare":["Leg_Press",2,"cvadricepși","gambe, fesieri, femurali"],"Pullover cu ganteră":["Bent-Arm_Dumbbell_Pullover",2,"piept","dorsali, umeri, triceps"],"Ramat cu ganteră":["One-Arm_Dumbbell_Row",2,"spate mijloc","biceps, dorsali, umeri"],"Ramat cu haltera":["Bent_Over_Barbell_Row",2,"spate mijloc","biceps, dorsali, umeri"],"Ramat la T-bar":["T-Bar_Row_with_Handle",2,"spate mijloc","biceps, dorsali"],"Ramat la cablu":["Seated_Cable_Rows",2,"spate mijloc","biceps, dorsali, umeri"],"Ridicări de picioare":["Hanging_Leg_Raise",2,"abdomen",""],"Ridicări de umeri":["Dumbbell_Shrug",2,"trapez",""],"Ridicări frontale":["Front_Dumbbell_Raise",2,"umeri",""],"Ridicări laterale":["Side_Lateral_Raise",2,"umeri",""],"Ridicări pe vârfuri":["Standing_Calf_Raises",2,"gambe",""],"Roată abdominală":["Ab_Roller",2,"abdomen","umeri"],"Rotiri ruse":["Russian_Twist",2,"abdomen","zona lombară"],"Superman":["Superman",2,"zona lombară","fesieri, femurali"],"Săritura corzii":["Rope_Jumping",2,"cvadricepși","gambe, femurali"],"Tracțiuni":["Pullups",2,"dorsali","biceps, spate mijloc"],"Tragere la bărbie":["Standing_Dumbbell_Upright_Row",2,"trapez","biceps, umeri"],"Tragere la piept":["Wide-Grip_Lat_Pulldown",2,"dorsali","biceps, spate mijloc, umeri"],"Împins cu gantere":["Dumbbell_Bench_Press",2,"piept","umeri, triceps"],"Împins cu priză îngustă":["Close-Grip_Barbell_Bench_Press",2,"triceps","piept, umeri"],"Împins deasupra capului":["Barbell_Shoulder_Press",2,"umeri","piept, triceps"],"Împins la aparat":["Machine_Bench_Press",2,"piept","umeri, triceps"],"Împins la bancă":["Barbell_Bench_Press_-_Medium_Grip",2,"piept","umeri, triceps"],"Împins la bancă declinat":["Decline_Barbell_Bench_Press",2,"piept","umeri, triceps"],"Împins înclinat cu gantere":["Incline_Dumbbell_Press",2,"piept","umeri, triceps"],"Îndreptări":["Barbell_Deadlift",2,"zona lombară","gambe, antebrațe, fesieri, femurali, dorsali, spate mijloc, cvadricepși, trapez"],"Îndreptări românești":["Romanian_Deadlift",2,"femurali","gambe, fesieri, zona lombară"],"Îndreptări românești cu gantere":["Stiff-Legged_Dumbbell_Deadlift",2,"femurali","fesieri, zona lombară"]};
+var S={tab:"azi",plan:"full",sel:(new Date().getDay()+6)%7,done:{},extra:{},goal:2000,lb:null,theme:null,w:{},bw:[],recent:[],fav:[],prof:null,mt:null,food:{},meal:0,q:""};
+var T={mode:"pauza",secs:60,end:0,run:false,start:0,el:0,iv:null};
+try{var s=JSON.parse(localStorage.getItem("fitplan")||"null");if(s)for(var k in s)S[k]=s[k]}catch(e){}
+function snap(){return {plan:S.plan,done:S.done,extra:S.extra,goal:S.goal,theme:S.theme,w:S.w,bw:S.bw,recent:S.recent,fav:S.fav,prof:S.prof,mt:S.mt,food:S.food,lb:S.lb}}
+function save(){try{localStorage.setItem("fitplan",JSON.stringify(snap()))}catch(e){}}
+function today(){var d=new Date();return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate()}
+function wk(){var d=new Date();d.setDate(d.getDate()-((d.getDay()+6)%7));return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate()}
+function $(h){var d=document.createElement("div");d.innerHTML=h;return d.firstElementChild}
+function esc(t){return String(t).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function list(day){var d=PLANS[S.plan].days[day],b=d?d[1].map(function(x){return{n:x[0],s:x[1],r:x[2]}}):[];var e=(S.extra[S.plan]&&S.extra[S.plan][day])||[];return b.concat(e.map(function(x,i){return{n:x.n,s:x.s,r:x.r,c:1,i:i}}))}
+function key(day,x,i){return wk()+"|"+S.plan+"|"+day+"|"+(x.c?"c"+x.i:"b"+i)}
+function eaten(){return(S.food[today()]||[]).reduce(function(a,f){return a+f.k},0)}
 
-/* ---------- adresare celule ---------- */
-function colLetter(n){
-  let s=""; n=n+1;
-  while(n>0){ const r=(n-1)%26; s=String.fromCharCode(65+r)+s; n=Math.floor((n-1)/26); }
-  return s;
-}
-function colIndex(letters){
-  let n=0; for(const ch of letters) n=n*26+(ch.charCodeAt(0)-64);
-  return n-1;
-}
-function parseRef(ref){
-  const m = /^([A-Za-z]+)(\d+)$/.exec(ref);
-  if(!m) return null;
-  return { col: colIndex(m[1].toUpperCase()), row: parseInt(m[2],10)-1 };
-}
-function cellRef(col,row){ return colLetter(col)+(row+1); }
+var tabs=[["azi","🏠","Azi"],["mancare","🍽️","Mâncare"],["sport","💪","Sport"],["timer","⏱️","Timer"]];
+function nav(){var n=document.getElementById("nav");n.innerHTML="";tabs.forEach(function(t){var b=$('<button><b>'+t[1]+'</b>'+t[2]+'</button>');if(S.tab===t[0])b.className="on";b.onclick=function(){S.tab=t[0];render()};n.appendChild(b)})}
 
-/* ---------- motor de formule ---------- */
-function tokenize(s){
-  const tokens = [];
-  const stack = [];                       // "f" = paranteză de funcție, "g" = paranteză obișnuită
-  const sepPunctVirgula = /;/.test(s.replace(/"(?:[^"]|"")*"/g, ""));
-  const inFn = ()=>stack.includes("f");
-  let i = 0, m;
-  while(i < s.length){
-    const ch = s[i];
-    if(/\s/.test(ch)){ i++; continue; }
-    if(ch === '"'){
-      let j = i+1, str = "";
-      while(j < s.length){
-        if(s[j] === '"'){ if(s[j+1] === '"'){ str += '"'; j += 2; continue; } break; }
-        str += s[j++];
-      }
-      if(j >= s.length) throw new Error("string neînchis");
-      tokens.push({t:"str", v:str}); i = j+1; continue;
-    }
-    const rest = s.slice(i);
-    if((m = /^[A-Za-z]+\d+(?![A-Za-z0-9(])/.exec(rest))){ tokens.push({t:"ref", v:m[0].toUpperCase()}); i += m[0].length; continue; }
-    if((m = /^[A-Za-z]+/.exec(rest))){ tokens.push({t:"name", v:m[0].toUpperCase()}); i += m[0].length; continue; }
-    if((sepPunctVirgula || !inFn()) && (m = /^\d+,\d+/.exec(rest))){
-      tokens.push({t:"num", v:parseFloat(m[0].replace(",","."))}); i += m[0].length; continue;
-    }
-    if((m = /^\d+(?:\.\d+)?/.exec(rest))){ tokens.push({t:"num", v:parseFloat(m[0])}); i += m[0].length; continue; }
-    if((m = /^(<=|>=|<>)/.exec(rest))){ tokens.push({t:"op", v:m[0]}); i += 2; continue; }
-    if("()+-*/^,;:%<>=".indexOf(ch) !== -1){
-      if(ch === "(") stack.push(tokens.length && tokens[tokens.length-1].t==="name" ? "f" : "g");
-      else if(ch === ")") stack.pop();
-      if(ch === "," && sepPunctVirgula) throw new Error("separator amestecat");
-      tokens.push({t:"op", v:ch}); i++; continue;
-    }
-    throw new Error("caracter necunoscut");
-  }
-  return tokens;
-}
-class CircularRefError extends Error { constructor(ref){ super("circular:"+ref); this.ref = ref; } }
+function vAzi(v){
+ var e=eaten(),g=S.goal,left=g-e,over=left<0;
+ var M=(S.food[today()]||[]).reduce(function(a,f){a[0]+=f.p||0;a[1]+=f.c||0;a[2]+=f.f||0;return a},[0,0,0]);
+ var T3=S.mt||[Math.round(g*.25/4),Math.round(g*.5/4),Math.round(g*.25/9)];
+ var lastW=S.bw.length?S.bw[S.bw.length-1].k:null;
+ function tile(bg,fg,fg2,ic,lab,val,sub,pct){return '<div style="background:'+bg+';border-radius:16px;padding:14px;color:'+fg+'"><div style="font-size:20px">'+ic+'</div><div style="font-size:13px;color:'+fg2+';margin-top:4px">'+lab+'</div><div style="font-size:22px;font-weight:800">'+val+'</div>'+(sub?'<div style="font-size:12px;color:'+fg2+'">'+sub+'</div>':'')+(pct!=null?'<div style="height:5px;border-radius:3px;background:rgba(0,0,0,.12);margin-top:8px"><div style="height:100%;border-radius:3px;background:'+fg+';width:'+Math.min(100,pct)+'%"></div></div>':'')+'</div>'}
+ var bgB=over?"#FAECE7":"#E1F5EE",fgB=over?"#712B13":"#085041",fg2B=over?"#993C1D":"#0F6E56";
+ var c=$('<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px"><div style="grid-column:1/3;background:'+bgB+';border-radius:18px;padding:16px;color:'+fgB+'"><div style="font-size:14px;color:'+fg2B+'">'+(over?"Kcal peste obiectiv":"Kcal rămase")+'</div><div style="font-size:52px;font-weight:800;line-height:1.1">'+Math.abs(left)+'</div><div style="font-size:14px;color:'+fg2B+'">din '+g+', ai mâncat '+e+'</div><div style="height:7px;border-radius:4px;background:rgba(0,0,0,.12);margin:10px 0"><div style="height:100%;border-radius:4px;background:'+fgB+';width:'+Math.min(100,e/g*100)+'%"></div></div><button id="g" style="border:0;background:none;color:'+fgB+';text-decoration:underline;padding:0;font-size:14px;cursor:pointer">Schimbă obiectivul</button></div>'
+  +tile("#EEEDFE","#3C3489","#534AB7","🥚","Proteine",Math.round(M[0])+" g","din "+T3[0]+" g",M[0]/(T3[0]||1)*100)
+  +tile("#FAEEDA","#633806","#854F0B","🍞","Carbohidrați",Math.round(M[1])+" g","din "+T3[1]+" g",M[1]/(T3[1]||1)*100)
+  +tile("#FAECE7","#712B13","#993C1D","🥑","Grăsimi",Math.round(M[2])+" g","din "+T3[2]+" g",M[2]/(T3[2]||1)*100)
+  +tile("#E6F1FB","#0C447C","#185FA5","⚖️","Greutate",lastW?lastW+" kg":"—",lastW?"ultima cântărire":"adaugă mai jos",null)+'</div>');
+ c.querySelector("#g").onclick=function(){S.tab="calc";render()};
+ v.appendChild($("<h1>Azi</h1>"));v.appendChild(document.createElement("br"));v.appendChild(c);
+ var G=S.prof?S.prof.g:null,gc=$('<div class="card"><b>Scopul meu</b><div class="seg" style="grid-template-columns:1fr 1fr 1fr;margin:10px 0 0"></div></div>');
+ [["Slăbit",-500],["Menținere",0],["Masă",300]].forEach(function(o){var b=$('<button class="btn'+(G===o[1]?" on":"")+'">'+o[0]+'</button>');b.onclick=function(){setGoal(o[1])};gc.lastChild.appendChild(b)});
+ v.appendChild(gc);
+ var tips=[],h=new Date().getHours(),tr=trend(),wd=weekDone(),rec=(G===300?"ppl":"full");
+ if(G===null)tips.push("Alege un scop mai sus și îți dau sfaturi potrivite, plus obiectivul de kcal.");
+ else{
+  if(over)tips.push(G<0?"Ai depășit obiectivul cu "+(-left)+" kcal azi. Nu e grav dacă se întâmplă rar, mâine revii la țintă.":"Ai trecut de obiectiv cu "+(-left)+" kcal. Pentru masă e în regulă dacă nu e mult peste.");
+  else if(h>=19&&left>g*.25)tips.push(G>0?"Ca să crești în masă ai nevoie de kcal: mai ai "+left+" de mâncat azi.":"Mai ai "+left+" kcal. Nu rămâne mult sub obiectiv, îți ține energia pentru antrenamente.");
+  if(h>=15&&M[0]<T3[0]*.6)tips.push("Proteine: "+Math.round(M[0])+" din "+T3[0]+" g. Adaugă o sursă: ou, piept de pui, brânză de vaci sau iaurt grecesc.");
+  if(wd[1])tips.push("Antrenamente complete săptămâna asta: "+wd[0]+" din "+wd[1]+"."+(G===300&&wd[0]?" Pentru masă, crește greutatea la un exercițiu când faci toate seriile ușor.":""));
+  if(tr!==null){var t1=tr.toFixed(1);
+   if(G<0)tips.push(tr>-0.1?"Greutatea nu scade ("+t1+" kg/săpt). Încearcă ~150 kcal mai puțin pe zi sau mai multă mișcare.":tr<-1?"Scazi cam repede ("+t1+" kg/săpt). Mănâncă puțin mai mult ca să-ți păstrezi mușchii.":"Ritm bun de slăbit: "+t1+" kg/săpt.");
+   else if(G>0)tips.push(tr<0.05?"Greutatea nu crește ("+t1+" kg/săpt). Adaugă ~150 kcal pe zi.":tr>0.6?"Crești cam repede ("+t1+" kg/săpt), parte poate fi grăsime. Scade ~100 kcal.":"Ritm bun pentru masă: +"+t1+" kg/săpt.");
+   else tips.push(Math.abs(tr)>0.3?"Greutatea se mișcă ("+(tr>0?"+":"")+t1+" kg/săpt). Ajustează ~100 kcal ca să revii pe loc.":"Greutatea e stabilă. Exact ce vrei la menținere.")}
+  else tips.push("Cântărește-te o dată pe săptămână, în aceeași zi, ca să vezi tendința.")}
+ var co=$('<div class="card"><b>Antrenorul tău</b></div>');
+ tips.forEach(function(t){co.appendChild($('<p style="margin:8px 0 0"></p>')).textContent=t});
+ if(G!==null&&S.plan!==rec){var rb=$('<button class="btn alt" style="width:100%;margin-top:12px"></button>');rb.textContent="Folosește programul „"+PLANS[rec].name+"”";rb.onclick=function(){S.plan=rec;save();S.tab="sport";render()};co.appendChild(rb)}
+ co.appendChild($('<p class="mute" style="font-size:13px;margin:12px 0 0">Sfaturi generale, nu înlocuiesc un medic sau un nutriționist.</p>'));
+ v.appendChild(co);
 
-function evalFormula(str, getVal){
-  const tokens = tokenize(str);
-  let i = 0;
-  const peek = ()=>tokens[i];
-  const next = ()=>tokens[i++];
-  const isOp = (t,v)=> !!t && t.t==="op" && t.v===v;
-  const expectOp = (v)=>{ if(!isOp(next(), v)) throw new Error("expected "+v); };
+ var log=S.food[today()]||[];
+ MEALS.forEach(function(m,mi){var items=log.map(function(f,i){return[f,i]}).filter(function(p){return p[0].m===mi});
+  var card=$('<div class="card"><div class="row"><b class="sp">'+m+'</b><span class="mute">'+items.reduce(function(a,p){return a+p[0].k},0)+' kcal</span></div></div>');
+  items.forEach(function(p){var r=$('<div class="row"><button class="sp" aria-label="Modifică '+esc(p[0].n)+'" style="text-align:left;border:0;background:none;padding:6px 0;cursor:pointer">'+esc(p[0].n)+'</button><span class="mute">'+p[0].k+'</span><button class="x" aria-label="Șterge">×</button></div>');
+   r.firstChild.onclick=function(){editFood(p[0])};r.querySelector(".x").onclick=function(){log.splice(p[1],1);save();render()};card.appendChild(r)});
+  if(!items.length)card.appendChild($('<div class="mute">Nimic adăugat</div>'));
+  v.appendChild(card)});
+ var L=list(S.sel=(new Date().getDay()+6)%7),n=0;L.forEach(function(x,i){if(S.done[key(S.sel,x,i)])n++});
+ var w=$('<div class="card"><b>Antrenament azi</b><div class="mute">'+(L.length?n+" din "+L.length+" exerciții făcute":"Zi de pauză")+'</div></div>');
+ w.style.cursor="pointer";w.onclick=function(){S.tab="sport";render()};v.appendChild(w);
+ var B=S.bw.slice(-12),last=B.length?B[B.length-1].k:null;
+ var bc=$('<div class="card"><div class="row"><b class="sp">Greutate corporală</b><span class="mute">'+(last?last+' kg':'')+'</span></div></div>');
+ if(B.length>1){var ks=B.map(function(x){return x.k}),mn=Math.min.apply(null,ks),mx=Math.max.apply(null,ks),rg=(mx-mn)||1;
+  var pts=B.map(function(x,i){return(i/(B.length-1)*296+2).toFixed(1)+","+(58-(x.k-mn)/rg*52).toFixed(1)}).join(" ");
+  bc.appendChild($('<svg viewBox="0 0 300 64" width="100%" height="64" role="img" aria-label="Grafic greutate"><polyline points="'+pts+'" fill="none" stroke="var(--acc)" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/></svg>'));
+  var df=(B[B.length-1].k-B[0].k).toFixed(1);bc.appendChild($('<div class="mute">'+(df>0?"+":"")+df+' kg față de prima cântărire din grafic</div>'))}
+ var bf=$('<div class="grid2"><input type="number" step="0.1" inputmode="decimal" placeholder="kg azi" aria-label="Greutate azi"><button class="btn">Salvează</button></div>');
+ bf.querySelector("button").onclick=function(){var k=+bf.querySelector("input").value;if(!(k>20&&k<400))return;var t=today(),l=S.bw[S.bw.length-1];if(l&&l.d===t)l.k=k;else S.bw.push({d:t,k:k});save();render()};
+ bc.appendChild(bf);v.appendChild(bc);
+ var rp=$('<div class="card"><div class="row"><div class="sp"><b>Raport săptămânal</b><div class="mute">Kcal, proteine, antrenamente și greutate pe ultimele 7 zile</div></div><button class="btn">Vezi</button></div></div>');
+ rp.querySelector("button").onclick=function(){S.tab="raport";render()};v.appendChild(rp);
+ var bk=$('<div class="card"><b>Copie de siguranță</b><div class="mute" style="margin:4px 0 10px">Datele sunt doar în acest telefon. Ultima copie: '+(S.lb||"niciodată")+'</div><div class="row"><button class="btn" id="bx" style="flex:1">Salvează datele</button><button class="btn alt" id="bi" style="flex:1">Restaurează</button></div></div>');
+ bk.querySelector("#bx").onclick=exportData;bk.querySelector("#bi").onclick=importData;v.appendChild(bk)}
 
-  function numOf(v){
-    if(v === null) return 0;
-    if(typeof v === "number") return v;
-    if(typeof v === "boolean") return v ? 1 : 0;
-    if(typeof v === "string"){
-      if(esteEroare(v)) throw new Error("ref-error");
-      const s = v.trim();
-      if(NUM_RE.test(s)) return parseFloat(s.replace(",","."));
-      throw new Error("text în calcul");
-    }
-    throw new Error("valoare invalidă");
-  }
-  function refVal(ref){
-    const v = getVal(ref);
-    if(esteEroare(v)) throw new Error("ref-error");
-    return v;
-  }
-  function scalar(a){
-    if(a.range){
-      if(a.range[0] !== a.range[1]) throw new Error("interval în loc de valoare");
-      const v = refVal(a.range[0]); return v === null ? 0 : v;
-    }
-    return a.value === null ? 0 : a.value;
-  }
-  function cmp(a, b, op){
-    if(a === null) a = typeof b === "string" ? "" : 0;
-    if(b === null) b = typeof a === "string" ? "" : 0;
-    if(typeof a === "boolean") a = a ? 1 : 0;
-    if(typeof b === "boolean") b = b ? 1 : 0;
-    let c;
-    if(typeof a === typeof b){
-      if(typeof a === "string"){ a = a.toLowerCase(); b = b.toLowerCase(); }
-      if(typeof a === "number" && Math.abs(a-b) <= 1e-9*Math.max(1,Math.abs(a),Math.abs(b))) c = 0;
-      else c = a < b ? -1 : a > b ? 1 : 0;
-    } else c = typeof a === "number" ? -1 : 1;
-    switch(op){
-      case "=": return c === 0;
-      case "<>": return c !== 0;
-      case "<": return c < 0;
-      case ">": return c > 0;
-      case "<=": return c <= 0;
-      default: return c >= 0;
-    }
-  }
+function vMancare(v){
+ v.appendChild($("<h1>Adaugă mâncare</h1>"));
+ var sel=$('<select aria-label="Masa" style="margin:14px 0"></select>');MEALS.forEach(function(m,i){var o=document.createElement("option");o.value=i;o.textContent=m;sel.appendChild(o)});
+ sel.value=S.meal;sel.onchange=function(){S.meal=+sel.value};v.appendChild(sel);
+ var q=$('<input type="text" placeholder="Caută: ou, pui, orez…" aria-label="Caută">');q.value=S.q;v.appendChild(q);
+ var tl=$('<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px"><button id="t1" style="border:0;text-align:left;background:#E6F1FB;color:#0C447C;border-radius:14px;padding:14px;cursor:pointer"><div style="font-size:22px">🔎</div><b>Caută produs</b><div style="font-size:12px;color:#185FA5">din magazine</div></button><button id="t2" style="border:0;text-align:left;background:#EEEDFE;color:#3C3489;border-radius:14px;padding:14px;cursor:pointer"><div style="font-size:22px">📷</div><b>Scanează</b><div style="font-size:12px;color:#534AB7">cod de bare</div></button></div>');
+ tl.querySelector("#t1").onclick=function(){o.scrollIntoView({behavior:"smooth"});o.querySelector("#oq").focus()};
+ tl.querySelector("#t2").onclick=function(){scan()};
+ v.appendChild(tl);
+ var FV=S.fav||[],rl=FV.concat((S.recent||[]).filter(function(r){return!FV.some(function(f){return f.n===r.n})})).slice(0,12);
+ if(rl.length){var PAL=[["#E1F5EE","#085041"],["#FAEEDA","#633806"],["#FAECE7","#712B13"],["#EEEDFE","#3C3489"]],rc=$('<div style="margin-top:14px"><b>Favorite și recente</b><div style="height:8px"></div></div>');
+  rl.forEach(function(r,ri){var pc=PAL[ri%4],fv=FV.some(function(f){return f.n===r.n});
+   var row=$('<div class="row" style="background:'+pc[0]+';color:'+pc[1]+';border-radius:14px;padding:2px 8px;margin-bottom:8px"><button class="food" style="border:0;flex:1;color:inherit"><span class="sp">'+esc(r.n)+'</span><span class="mute">'+r.k+' kcal</span></button><button class="x" style="color:inherit" aria-label="Favorit">'+(fv?"★":"☆")+'</button></div>');
+   row.firstChild.onclick=function(){add(r.n,r.k,r.p,r.c,r.f)};
+   row.lastChild.onclick=function(){S.fav=fv?FV.filter(function(f){return f.n!==r.n}):[r].concat(FV);save();render()};rc.appendChild(row)});v.appendChild(rc)}
+ var box=$('<div class="card" style="margin-top:12px"></div>');v.appendChild(box);
+ function fill(){box.innerHTML="";var f=FOODS.filter(function(x){return x[0].toLowerCase().indexOf(S.q.toLowerCase())>=0});
+  f.forEach(function(x){var b=$('<button class="food"><span class="sp">'+esc(x[0])+'<br><small class="mute">P '+x[2]+' · C '+x[3]+' · G '+x[4]+'</small></span><span class="mute">'+x[1]+' kcal</span><b style="color:var(--acc)">+</b></button>');
+   b.onclick=function(){add(x[0],x[1],x[2],x[3],x[4])};box.appendChild(b)});
+  if(!f.length)box.appendChild($('<div class="mute">Nu am găsit. Adaugă-l manual mai jos.</div>'))}
+ q.oninput=function(){S.q=q.value;fill()};fill();
+ var o=$('<div class="card"><b>Produse din magazin</b><div class="grid2"><input type="text" id="oq" placeholder="ex: iaurt Napolact" maxlength="50"><button class="btn" id="ob">Caută</button></div><div class="grid2"><input type="text" inputmode="numeric" id="oc" placeholder="Cod de bare" maxlength="14"><button class="btn alt" id="oz">Scanează</button></div><div id="or" style="margin-top:8px"></div></div>');
+ var OR=o.querySelector("#or");
+ function msg(t){OR.innerHTML='<div class="mute">'+t+'</div>';o.scrollIntoView({behavior:"smooth",block:"center"})}
+ function show(L){OR.innerHTML="";var n=0;L.forEach(function(p){var m=p.nutriments||{},kc=m["energy-kcal_100g"];var nm=(p.product_name||"").trim();if(kc==null||!nm||n>=15)return;n++;
+  if(p.brands)nm+=" ("+p.brands.split(",")[0].trim()+")";
+  var b=$('<button class="food"><span class="sp">'+esc(nm)+'<br><small class="mute">P '+Math.round(m.proteins_100g||0)+' · C '+Math.round(m.carbohydrates_100g||0)+' · G '+Math.round(m.fat_100g||0)+' la 100 g</small></span><span class="mute">'+Math.round(kc)+' kcal</span><b style="color:var(--acc)">+</b></button>');
+  b.onclick=function(){var g=+prompt("Câte grame ai mâncat?",p.serving_quantity||100);if(!(g>0))return;var f=g/100;
+   add(nm.slice(0,40)+", "+g+" g",kc*f,(m.proteins_100g||0)*f,(m.carbohydrates_100g||0)*f,(m.fat_100g||0)*f)};OR.appendChild(b)});
+  if(!n)msg("Nu am găsit produse cu valori nutriționale. Încearcă alt nume sau adaugă manual.")}
+ function load(u){msg("Se caută…");fetch(u).then(function(r){return r.json()}).then(function(d){if(d.product)show([d.product]);else show(d.products||[])}).catch(function(){msg("Nu merge căutarea. Verifică internetul.")})}
+ var F="&fields=product_name,brands,nutriments,serving_quantity";
+ o.querySelector("#ob").onclick=function(){var t=o.querySelector("#oq").value.trim();if(t)load("https://world.openfoodfacts.org/cgi/search.pl?search_simple=1&action=process&json=1&page_size=25&search_terms="+encodeURIComponent(t)+F)};
+ function code(c){load("https://world.openfoodfacts.org/api/v2/product/"+encodeURIComponent(c)+".json?"+F.slice(1))}
+ o.querySelector("#oc").onchange=function(e){if(e.target.value.trim())code(e.target.value.trim())};
+ function lookupDone(c){o.querySelector("#oc").value=c;code(c)}
+ function withZX(cb){if(window.ZXing)return cb(true);var sc=document.createElement("script");sc.src="https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js";sc.onload=function(){cb(true)};sc.onerror=function(){cb(false)};document.head.appendChild(sc)}
+ function mkReader(){var h=new Map();h.set(ZXing.DecodeHintType.POSSIBLE_FORMATS,[ZXing.BarcodeFormat.EAN_13,ZXing.BarcodeFormat.EAN_8,ZXing.BarcodeFormat.UPC_A,ZXing.BarcodeFormat.UPC_E]);h.set(ZXing.DecodeHintType.TRY_HARDER,true);var r=new ZXing.MultiFormatReader();r.setHints(h);return r}
+ function decodeCanvas(cv,rd){try{return rd.decode(new ZXing.BinaryBitmap(new ZXing.HybridBinarizer(new ZXing.HTMLCanvasElementLuminanceSource(cv)))).getText()}catch(e){return null}}
+ function photo(){var i=document.createElement("input");i.type="file";i.accept="image/*";i.setAttribute("capture","environment");
+  i.onchange=function(){var f=i.files&&i.files[0];if(!f)return;msg("Citesc codul…");
+   withZX(function(ok){if(!ok){msg("Nu pot citi codul fără internet. Scrie codul de bare.");return}
+    var img=new Image();img.onload=function(){var rd=mkReader(),res=null,sz=[1000,700,1400];
+     for(var k=0;k<sz.length&&!res;k++){var sc=Math.min(1,sz[k]/Math.max(img.width,img.height)),cv=document.createElement("canvas");cv.width=Math.round(img.width*sc);cv.height=Math.round(img.height*sc);cv.getContext("2d").drawImage(img,0,0,cv.width,cv.height);res=decodeCanvas(cv,rd)}
+     if(res)lookupDone(res);else msg("Nu am găsit codul în poză. Încearcă o poză mai apropiată și clară, sau scrie codul de bare.")};
+    img.onerror=function(){msg("Nu am putut deschide poza.")};img.src=URL.createObjectURL(f)})};
+  i.click()}
+ function fallback(why){OR.innerHTML="";OR.appendChild($('<div class="mute"></div>')).textContent=why;
+  var pb=$('<button class="btn" style="margin-top:8px;width:100%">Fotografiază codul de bare</button>');pb.onclick=photo;OR.appendChild(pb);o.scrollIntoView({behavior:"smooth",block:"center"})}
+ function scan(){
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){fallback("Camera live nu merge aici. Fotografiază codul sau scrie-l mai sus.");return}
+  var ov=$('<div style="position:fixed;inset:0;background:#000;z-index:9;display:flex;flex-direction:column"><div style="color:#fff;text-align:center;padding:14px">Îndreaptă camera spre codul de bare</div><video playsinline muted style="flex:1;width:100%;object-fit:cover;min-height:0"></video><button class="btn" style="margin:16px">Închide</button></div>');
+  document.body.appendChild(ov);var vd=ov.querySelector("video"),st=null,iv=null,fin=false;
+  function stop(){clearInterval(iv);if(st)st.getTracks().forEach(function(t){t.stop()});ov.remove()}
+  function found(c){if(fin)return;fin=true;stop();lookupDone(c)}
+  ov.querySelector(".btn").onclick=function(){fin=true;stop()};
+  navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"}},audio:false}).then(function(m){
+   if(fin){m.getTracks().forEach(function(t){t.stop()});return}
+   st=m;vd.srcObject=m;vd.muted=true;var pl=vd.play();if(pl&&pl.catch)pl.catch(function(){});
+   var nat=null;try{if("BarcodeDetector" in window)nat=new BarcodeDetector({formats:["ean_13","ean_8","upc_a","upc_e"]})}catch(e){}
+   function go(rd){var cv=document.createElement("canvas"),cx=cv.getContext("2d");iv=setInterval(function(){
+    if(nat){nat.detect(vd).then(function(r){if(r.length)found(r[0].rawValue)}).catch(function(){})}
+    else if(vd.videoWidth){cv.width=vd.videoWidth;cv.height=vd.videoHeight;cx.drawImage(vd,0,0);var t=decodeCanvas(cv,rd);if(t)found(t)}},350)}
+   if(nat)go(null);else withZX(function(ok){if(!ok){fin=true;stop();fallback("Scanerul are nevoie de internet la prima folosire.");return}if(!fin)go(mkReader())})
+  }).catch(function(){fin=true;stop();fallback("Nu am acces la cameră aici. Dacă folosești previzualizarea din Claude, camera e blocată acolo. Fotografiază codul sau scrie-l mai sus.")})}
+ o.querySelector("#oz").onclick=scan;
+ v.appendChild(o);
+ var m=$('<div class="card"><b>Adaugă manual</b><div class="grid2"><input type="text" id="mn" placeholder="Ce ai mâncat" maxlength="40"><input type="number" id="mk" placeholder="kcal" min="1"></div><div class="grid2" style="grid-template-columns:1fr 1fr 1fr"><input type="number" id="mp" placeholder="Prot. g" min="0"><input type="number" id="mc" placeholder="Carbo g" min="0"><input type="number" id="mf" placeholder="Grăsimi g" min="0"></div><button class="btn" id="ma" style="margin-top:10px;width:100%">Adaugă</button></div>');
+ m.querySelector("#ma").onclick=function(){var n=m.querySelector("#mn").value.trim(),k=+m.querySelector("#mk").value;if(n&&k>0)add(n,k,+m.querySelector("#mp").value,+m.querySelector("#mc").value,+m.querySelector("#mf").value)};v.appendChild(m);
+ function add(n,k,p,c,f){var t=today();S.food[t]=S.food[t]||[];S.food[t].push({n:n,k:Math.round(k),m:S.meal,p:p||0,c:c||0,f:f||0});var it={n:n,k:Math.round(k),p:p||0,c:c||0,f:f||0};S.recent=[it].concat((S.recent||[]).filter(function(r){return r.n!==n})).slice(0,12);save();S.tab="azi";render()}}
 
-  function parseCompare(){
-    let v = parseAdd();
-    while(peek() && peek().t==="op" && ["=","<>","<",">","<=",">="].indexOf(peek().v) !== -1){
-      const op = next().v; const r = parseAdd(); v = cmp(v, r, op);
-    }
-    return v;
-  }
-  function parseAdd(){
-    let v = parseTerm();
-    while(isOp(peek(),"+") || isOp(peek(),"-")){
-      const op = next().v; const r = parseTerm();
-      v = op==="+" ? numOf(v)+numOf(r) : numOf(v)-numOf(r);
-    }
-    return v;
-  }
-  function parseTerm(){
-    let v = parsePow();
-    while(isOp(peek(),"*") || isOp(peek(),"/")){
-      const op = next().v; const r = parsePow();
-      v = op==="*" ? numOf(v)*numOf(r) : numOf(v)/numOf(r);
-    }
-    return v;
-  }
-  function parsePow(){
-    let v = parseUnary();
-    while(isOp(peek(),"^")){ next(); v = Math.pow(numOf(v), numOf(parseUnary())); }
-    return v;
-  }
-  function parseUnary(){
-    if(isOp(peek(),"-")){ next(); return -numOf(parseUnary()); }
-    if(isOp(peek(),"+")){ next(); return numOf(parseUnary()); }
-    return parsePostfix();
-  }
-  function parsePostfix(){
-    let v = parsePrimary();
-    while(isOp(peek(),"%")){ next(); v = numOf(v)/100; }
-    return v;
-  }
-  function parsePrimary(){
-    const t = next();
-    if(!t) throw new Error("formulă incompletă");
-    if(t.t === "num") return t.v;
-    if(t.t === "str") return t.v;
-    if(t.t === "ref") return refVal(t.v);
-    if(t.t === "name"){
-      expectOp("(");
-      const args = parseArgs();
-      expectOp(")");
-      return callFunc(t.v, args);
-    }
-    if(isOp(t,"(")){ const v = parseCompare(); expectOp(")"); return v; }
-    throw new Error("simbol neașteptat");
-  }
-  function parseArgs(){
-    const args = [];
-    if(isOp(peek(),")")) return args;
-    args.push(parseArg());
-    while(isOp(peek(),",") || isOp(peek(),";")){ next(); args.push(parseArg()); }
-    return args;
-  }
-  function parseArg(){
-    const t = peek();
-    if(t && t.t === "ref"){
-      const n1 = tokens[i+1], n2 = tokens[i+2];
-      if(isOp(n1,":") && n2 && n2.t==="ref"){ i += 3; return { range:[t.v, n2.v] }; }
-      if(!n1 || isOp(n1,",") || isOp(n1,";") || isOp(n1,")")){ i++; return { range:[t.v, t.v] }; }
-    }
-    return { value: parseCompare() };
-  }
-  function expandRange(a, b){
-    const pa = parseRef(a), pb = parseRef(b);
-    const c0=Math.min(pa.col,pb.col), c1=Math.max(pa.col,pb.col);
-    const r0=Math.min(pa.row,pb.row), r1=Math.max(pa.row,pb.row);
-    const out = [];
-    for(let r=r0;r<=r1;r++) for(let c=c0;c<=c1;c++) out.push(cellRef(c,r));
-    return out;
-  }
-  // numerele dintr-un set de argumente; celulele goale și textul din intervale sunt ignorate
-  function gather(args){
-    const nums = []; let nonEmpty = 0;
-    args.forEach(a=>{
-      if(a.range){
-        expandRange(a.range[0], a.range[1]).forEach(ref=>{
-          const v = refVal(ref);
-          if(v === null) return;
-          nonEmpty++;
-          if(typeof v === "number") nums.push(v);
-        });
-      } else {
-        nonEmpty++;
-        nums.push(numOf(a.value));
-      }
-    });
-    return { nums, nonEmpty };
-  }
-  function makeCriteria(c){
-    let op = "=", operand = c;
-    if(typeof c === "string"){
-      const m = /^(<=|>=|<>|<|>|=)?([\s\S]*)$/.exec(c);
-      op = m[1] || "="; operand = m[2];
-      const s = operand.trim();
-      if(NUM_RE.test(s)) operand = parseFloat(s.replace(",","."));
-    } else if(typeof c === "boolean") operand = c ? 1 : 0;
-    return (v)=>{
-      if(esteEroare(v)) return false;
-      if(typeof operand === "number"){
-        if(typeof v !== "number") return op === "<>";
-        return cmp(v, operand, op);
-      }
-      const eq = typeof v === "string" && v.toLowerCase() === String(operand).toLowerCase();
-      if(op === "=") return eq;
-      if(op === "<>") return !eq;
-      if(typeof v !== "string") return false;
-      return cmp(v, operand, op);
-    };
-  }
-  function callFunc(name, args){
-    switch(name){
-      case "SUM": return gather(args).nums.reduce((s,x)=>s+x, 0);
-      case "AVERAGE": { const n = gather(args).nums; return n.length ? n.reduce((s,x)=>s+x,0)/n.length : 0; }
-      case "COUNT": return gather(args).nums.length;
-      case "COUNTA": return gather(args).nonEmpty;
-      case "MIN": { const n = gather(args).nums; return n.length ? Math.min.apply(null,n) : 0; }
-      case "MAX": { const n = gather(args).nums; return n.length ? Math.max.apply(null,n) : 0; }
-      case "PRODUCT": { const n = gather(args).nums; return n.length ? n.reduce((s,x)=>s*x,1) : 0; }
-      case "ROUND": {
-        if(args.length < 1 || args.length > 2) throw new Error("ROUND: argumente");
-        const x = numOf(scalar(args[0]));
-        let n = args.length === 2 ? Math.trunc(numOf(scalar(args[1]))) : 0;
-        n = Math.max(-15, Math.min(15, n));
-        const m = Math.pow(10, Math.abs(n)), ax = Math.abs(x);
-        const r = n >= 0 ? Math.round(ax*m*(1+1e-12))/m : Math.round(ax/m*(1+1e-12))*m;
-        return x < 0 ? -r : r;
-      }
-      case "IF": {
-        if(args.length < 2 || args.length > 3) throw new Error("IF: argumente");
-        const c = scalar(args[0]);
-        let truth;
-        if(typeof c === "boolean") truth = c;
-        else if(typeof c === "number") truth = c !== 0;
-        else throw new Error("IF: condiție text");
-        if(truth) return scalar(args[1]);
-        return args.length === 3 ? scalar(args[2]) : false;
-      }
-      case "SUMIF":
-      case "COUNTIF": {
-        const esteSum = name === "SUMIF";
-        if(args.length < 2 || args.length > (esteSum ? 3 : 2)) throw new Error(name+": argumente");
-        if(!args[0].range) throw new Error(name+": interval");
-        const test = makeCriteria(scalar(args[1]));
-        const refs = expandRange(args[0].range[0], args[0].range[1]);
-        let sumRefs = refs;
-        if(esteSum && args.length === 3){
-          if(!args[2].range) throw new Error("SUMIF: interval sumă");
-          const pa = parseRef(args[0].range[0]), pb = parseRef(args[0].range[1]);
-          const w = Math.abs(pa.col-pb.col)+1, h = Math.abs(pa.row-pb.row)+1;
-          const sa = parseRef(args[2].range[0]), sb = parseRef(args[2].range[1]);
-          const c0 = Math.min(sa.col,sb.col), r0 = Math.min(sa.row,sb.row);
-          sumRefs = [];
-          for(let r=0;r<h;r++) for(let c=0;c<w;c++) sumRefs.push(cellRef(c0+c, r0+r));
-        }
-        let total = 0, count = 0;
-        refs.forEach((ref, idx)=>{
-          const v = getVal(ref);
-          if(!test(v)) return;
-          count++;
-          if(esteSum){
-            const sv = getVal(sumRefs[idx]);
-            if(esteEroare(sv)) throw new Error("ref-error");
-            if(typeof sv === "number") total += sv;
-          }
-        });
-        return esteSum ? total : count;
-      }
-      default: throw new Error("funcție necunoscută "+name);
-    }
-  }
-  const result = parseCompare();
-  if(i !== tokens.length) throw new Error("simboluri în plus");
-  return result;
-}
+function vSport(v){
+ v.appendChild($("<h1>Antrenament</h1>"));
+ var p=$('<select aria-label="Program" style="margin-top:12px"></select>');Object.keys(PLANS).forEach(function(k){var o=document.createElement("option");o.value=k;o.textContent=PLANS[k].name;p.appendChild(o)});
+ p.value=S.plan;p.onchange=function(){S.plan=p.value;save();render()};v.appendChild(p);
+ var w=$('<div class="week"></div>');
+ for(var d=0;d<7;d++)(function(d){var L=list(d),n=0;L.forEach(function(x,i){if(S.done[key(d,x,i)])n++});
+  var dd=new Date();dd.setDate(dd.getDate()-((dd.getDay()+6)%7)+d);var isT=d===(new Date().getDay()+6)%7;
+  var b=$('<button class="day'+(L.length?(n===L.length?" full":(n?" has":"")):" rest")+(d===S.sel?" sel":"")+'" aria-label="'+ZN[d]+' '+dd.getDate()+'"'+(isT?' style="box-shadow:inset 0 0 0 2px var(--acc)"':'')+'>'+Z[d]+'<small style="display:block;font-size:11px;opacity:.7">'+dd.getDate()+'</small><i></i></button>');b.onclick=function(){S.sel=d;render()};w.appendChild(b)})(d);
+ v.appendChild(w);
+ var D=PLANS[S.plan].days[S.sel],L=list(S.sel),n=0;
+ var m=0;L.forEach(function(x,i){if(S.done[key(S.sel,x,i)])m++});
+ v.appendChild($('<div style="background:#EEEDFE;color:#3C3489;border-radius:16px;padding:14px 16px;margin-bottom:12px"><div style="font-size:13px;color:#534AB7">'+ZN[S.sel]+'</div><div style="font-size:24px;font-weight:800">'+(D?esc(D[0]):"Zi de pauză")+'</div>'+(L.length?'<div style="height:6px;background:rgba(0,0,0,.1);border-radius:3px;margin-top:8px"><div style="height:100%;background:#3C3489;border-radius:3px;width:'+(m/L.length*100)+'%"></div></div><div style="font-size:12px;color:#534AB7;margin-top:4px">'+m+' din '+L.length+' exerciții</div>':'')+'</div>'));
+ if(!L.length)v.appendChild($('<div class="card mute">Zi de pauză. Adaugă un exercițiu dacă vrei să te miști totuși.</div>'));
+ L.forEach(function(x,i){var k=key(S.sel,x,i),on=!!S.done[k];if(on)n++;
+  var r=$('<div class="ex'+(on?" done":"")+'"><input type="checkbox" '+(on?"checked":"")+' aria-label="'+esc(x.n)+'"><div class="sp"><div class="n">'+esc(x.n)+'</div><div class="m">'+x.s+' serii × '+esc(x.r)+'</div></div><input type="number" inputmode="decimal" step="0.5" min="0" class="kg" placeholder="kg" aria-label="Greutate '+esc(x.n)+'" value="'+(S.w[x.n]||'')+'"></div>');
+  r.querySelector("input").onchange=function(e){if(e.target.checked){S.done[k]=1;T.mode="pauza";startRest(T.secs,true)}else delete S.done[k];save();render()};
+  r.querySelector(".kg").onchange=function(e){S.w[x.n]=e.target.value;save()};
+  if(IMG[x.n]){var sp=r.querySelector(".sp");sp.style.cursor="pointer";sp.querySelector(".n").appendChild(document.createTextNode(" 🖼"));sp.onclick=function(){showEx(x.n)}}
+  if(x.c){var del=$('<button class="x" aria-label="Șterge">×</button>');del.onclick=function(){S.extra[S.plan][S.sel].splice(x.i,1);save();render()};r.appendChild(del)}
+  v.appendChild(r)});
+ var lib=$('<div class="card"><b>Idei de exerciții</b><div class="mute" style="font-size:13px" id="lh"></div><div id="lb" style="margin-top:10px"></div></div>');
+ var LC={"Piept":["#E6F1FB","#0C447C","#185FA5","🏋️"],"Spate":["#EEEDFE","#3C3489","#534AB7","🧗"],"Umeri":["#FAEEDA","#633806","#854F0B","🙆"],"Biceps":["#FAECE7","#712B13","#993C1D","💪"],"Triceps":["#E1F5EE","#085041","#0F6E56","🦾"],"Picioare":["#EAF3DE","#27500A","#3B6D11","🦵"],"Fesieri":["#FBEAF0","#72243E","#993556","🍑"],"Abdomen":["#F1EFE8","#444441","#5F5E5A","🧘"],"Cardio":["#FCEBEB","#791F1F","#A32D2D","🏃"]};
+ function fillLib(){var lb=lib.querySelector("#lb"),lh=lib.querySelector("#lh");lb.innerHTML="";
+  if(!LG){lh.textContent="Alege o grupă musculară";var g=$('<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"></div>');
+   Object.keys(LIB).forEach(function(k){var c=LC[k],b=$('<button style="border:0;text-align:left;border-radius:14px;padding:14px;cursor:pointer;background:'+c[0]+';color:'+c[1]+'"><div style="font-size:22px">'+c[3]+'</div><b></b><div style="font-size:12px;color:'+c[2]+'"></div></button>');
+    b.querySelector("b").textContent=k;b.lastChild.textContent=LIB[k].length+" exerciții";b.onclick=function(){LG=k;fillLib()};g.appendChild(b)});
+   lb.appendChild(g);return}
+  lh.textContent="Apasă pe nume pentru poză, apasă + ca să adaugi în ziua de sus";
+  var bk=$('<button class="btn alt" style="padding:8px 14px">‹ Toate grupele</button>');bk.onclick=function(){LG=null;fillLib()};lb.appendChild(bk);
+  var c=LC[LG],hd=$('<div style="border-radius:12px;padding:10px 14px;font-weight:800;font-size:18px;margin:10px 0 4px"></div>');hd.style.background=c[0];hd.style.color=c[1];hd.textContent=c[3]+" "+LG;lb.appendChild(hd);
+  LIB[LG].forEach(function(x){var r=$('<div class="row" style="padding:9px 0;border-bottom:1px solid var(--line)"><div class="sp"><div class="n"></div><div class="m"></div></div><button class="btn alt" style="padding:6px 14px" aria-label="Adaugă">+</button></div>');
+   r.querySelector(".n").textContent=x[0]+(IMG[x[0]]?" 🖼":"");r.querySelector(".m").textContent=x[1]+" serii × "+x[2];
+   if(IMG[x[0]]){var sq=r.querySelector(".sp");sq.style.cursor="pointer";sq.onclick=function(){showEx(x[0])}}
+   r.querySelector("button").onclick=function(){S.extra[S.plan]=S.extra[S.plan]||{};S.extra[S.plan][S.sel]=S.extra[S.plan][S.sel]||[];S.extra[S.plan][S.sel].push({n:x[0],s:x[1],r:x[2]});save();var y=window.scrollY;render();window.scrollTo(0,y)};lb.appendChild(r)})}
+ fillLib();v.appendChild(lib);
+ var f=$('<div class="card"><b>Exercițiu nou</b><div class="grid2" style="grid-template-columns:1fr 70px 70px"><input type="text" id="an" placeholder="Nume" maxlength="40" style="grid-column:1/-1"><input type="number" id="as" placeholder="Serii" min="1"><input type="text" id="ar" placeholder="Rep." maxlength="10"></div><button class="btn" style="margin-top:10px;width:100%">Adaugă</button></div>');
+ f.querySelector(".btn").onclick=function(){var n=f.querySelector("#an").value.trim(),s=f.querySelector("#as").value,r=f.querySelector("#ar").value.trim();if(!n||!s||!r)return;
+  S.extra[S.plan]=S.extra[S.plan]||{};S.extra[S.plan][S.sel]=S.extra[S.plan][S.sel]||[];S.extra[S.plan][S.sel].push({n:n,s:s,r:r});save();render()};
+ v.appendChild(f)}
 
-function recomputeSheet(sheet){
-  const memo = {};
-  const visiting = new Set();
-  function getVal(ref){
-    ref = ref.toUpperCase();
-    if(Object.prototype.hasOwnProperty.call(memo, ref)) return memo[ref];
-    if(visiting.has(ref)) throw new CircularRefError(ref);
-    const raw = sheet.data[ref];
-    if(raw === undefined || raw === "" || raw === null){ memo[ref] = null; return null; }
-    if(typeof raw === "string" && raw.trim().startsWith("=")){
-      visiting.add(ref);
-      let val;
-      try{
-        val = evalFormula(raw.trim().slice(1), getVal);
-        if(val === null) val = 0;
-        if(typeof val === "number" && !isFinite(val)) val = "#ERR";
-      }catch(e){
-        val = (e instanceof CircularRefError) ? "#CIRC" : "#ERR";
-        visiting.delete(ref);
-        memo[ref] = val;
-        if(e instanceof CircularRefError && e.ref !== ref) throw e;
-        return val;
-      }
-      visiting.delete(ref);
-      memo[ref] = val;
-      return val;
-    }
-    const str = String(raw).trim();
-    memo[ref] = NUM_RE.test(str) ? parseFloat(str.replace(",",".")) : raw;
-    return memo[ref];
-  }
-  Object.keys(sheet.data).forEach(ref=>getVal(ref));
-  sheet.values = memo;
-}
+var AC;function beep(){try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();[0,.25,.5].forEach(function(t){var o=AC.createOscillator(),g=AC.createGain();o.frequency.value=880;o.connect(g);g.connect(AC.destination);g.gain.value=.2;o.start(AC.currentTime+t);o.stop(AC.currentTime+t+.15)})}catch(e){}if(navigator.vibrate)navigator.vibrate([200,100,200])}
+function fmt(s){s=Math.max(0,Math.ceil(s));return Math.floor(s/60)+":"+("0"+(s%60)).slice(-2)}
+function startRest(sec,quiet){T.secs=sec;T.end=Date.now()+sec*1000;T.run=true;tick();clearInterval(T.iv);T.iv=setInterval(tick,200);try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();if(AC.state==="suspended")AC.resume()}catch(e){}}
+function tick(){var e=document.getElementById("tm");
+ if(T.mode==="pauza"&&T.run){var left=(T.end-Date.now())/1000;if(left<=0){T.run=false;clearInterval(T.iv);beep();left=0}if(e)e.textContent=fmt(left)}
+ else if(T.mode==="crono"&&T.run){if(e){var s=Math.floor((T.el+Date.now()-T.start)/1000);e.textContent=fmt(s)}}}
+function vTimer(v){
+ v.appendChild($("<h1>Timer</h1>"));
+ var sg=$('<div class="seg" style="margin-top:14px"><button class="btn">Pauză</button><button class="btn">Cronometru</button></div>');
+ var bs=sg.querySelectorAll("button");bs[T.mode==="pauza"?0:1].className="btn on";
+ bs[0].onclick=function(){T.mode="pauza";T.run=false;clearInterval(T.iv);render()};bs[1].onclick=function(){T.mode="crono";T.run=false;T.el=0;clearInterval(T.iv);render()};
+ v.appendChild(sg);
+ var t=$('<div class="time" id="tm" aria-live="off"></div>');v.appendChild(t);
+ if(T.mode==="pauza"){t.textContent=T.run?fmt((T.end-Date.now())/1000):fmt(T.secs);
+  var pr=$('<div class="pre"></div>');[30,60,90,120].forEach(function(s){var b=$('<button class="btn alt">'+s+' s</button>');b.onclick=function(){startRest(s);render()};pr.appendChild(b)});v.appendChild(pr);
+  var st=$('<button class="btn" style="width:100%">'+(T.run?"Oprește":"Pornește "+T.secs+" s")+'</button>');
+  st.onclick=function(){if(T.run){T.run=false;clearInterval(T.iv)}else startRest(T.secs);render()};v.appendChild(st);
+  v.appendChild($('<p class="mute">Când bifezi un exercițiu, pauza pornește singură.</p>'))}
+ else{t.textContent=fmt((T.el+(T.run?Date.now()-T.start:0))/1000);
+  var go=$('<button class="btn" style="width:100%">'+(T.run?"Pauză":"Pornește")+'</button>');
+  go.onclick=function(){if(T.run){T.el+=Date.now()-T.start;T.run=false;clearInterval(T.iv)}else{T.start=Date.now();T.run=true;clearInterval(T.iv);T.iv=setInterval(tick,200)}render()};
+  var rs=$('<button class="btn alt" style="width:100%;margin-top:8px">Resetează</button>');rs.onclick=function(){T.run=false;T.el=0;clearInterval(T.iv);render()};
+  v.appendChild(go);v.appendChild(rs)}}
 
-/* ---------- ajustarea formulelor la ștergerea unui rând / a unei coloane ---------- */
-function shiftRefs(formula, axis, idx){
-  const RE = /([A-Za-z]+)(\d+)(?::([A-Za-z]+)(\d+))?(?![A-Za-z0-9(])/g;
-  const repl = (match, c1, r1, c2, r2)=>{
-    const a = { col: colIndex(c1.toUpperCase()), row: +r1-1 };
-    if(c2 === undefined){
-      const v = axis==="col" ? a.col : a.row;
-      if(v === idx) return "#REF";
-      if(v > idx){ if(axis==="col") a.col--; else a.row--; }
-      return cellRef(a.col, a.row);
-    }
-    const b = { col: colIndex(c2.toUpperCase()), row: +r2-1 };
-    const lo = axis==="col" ? Math.min(a.col,b.col) : Math.min(a.row,b.row);
-    const hi = axis==="col" ? Math.max(a.col,b.col) : Math.max(a.row,b.row);
-    if(lo === idx && hi === idx) return "#REF";
-    const nlo = lo > idx ? lo-1 : lo;
-    const nhi = hi >= idx ? hi-1 : hi;
-    if(axis === "col"){
-      return cellRef(nlo, Math.min(a.row,b.row)) + ":" + cellRef(nhi, Math.max(a.row,b.row));
-    }
-    return cellRef(Math.min(a.col,b.col), nlo) + ":" + cellRef(Math.max(a.col,b.col), nhi);
-  };
-  return formula.split(/("(?:[^"]|"")*")/).map((seg,k)=> k%2 ? seg : seg.replace(RE, repl)).join("");
-}
-
-/* ---------- stare ---------- */
-function idNou(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
-function foaieNoua(nume){ return { id:idNou(), nume:nume||"Foaie", cols:8, rows:20, data:{}, fmt:{} }; }
-
-let store = { sheets:[foaieNoua("Foaie 1")], activ:null };
-store.activ = store.sheets[0].id;
-let sel = { col:0, row:0 };
-
-function normalizeazaStore(){
-  store.sheets.forEach(s=>{
-    if(!s.data) s.data = {};
-    if(!s.fmt) s.fmt = {};
-    if(!s.cols) s.cols = 8;
-    if(!s.rows) s.rows = 20;
-    delete s.values;
-  });
-  if(!store.sheets.some(s=>s.id===store.activ)) store.activ = store.sheets[0].id;
-}
-function incarca(){
-  try{
-    const raw = localStorage.getItem(CHEIE);
-    if(raw){
-      const parsat = JSON.parse(raw);
-      if(parsat && Array.isArray(parsat.sheets) && parsat.sheets.length){
-        store = { sheets:parsat.sheets, activ:parsat.activ };
-      }
-    }
-  }catch(e){}
-  normalizeazaStore();
-}
-// instantaneu al stării, fără rezultatele calculate (se recalculează la afișare)
-function snap(){ return JSON.stringify({sheets:store.sheets, activ:store.activ}, (k,v)=> k==="values" ? undefined : v); }
-let tSalvare = null, avertizatSalvare = false;
-function salveaza(){
-  clearTimeout(tSalvare);
-  try{ localStorage.setItem(CHEIE, snap()); }
-  catch(e){ if(!avertizatSalvare){ avertizatSalvare = true; arataToast("⚠ Nu am putut salva (memorie plină?)"); } }
-}
-function salveazaIntarziat(){ clearTimeout(tSalvare); tSalvare = setTimeout(salveaza, 300); }
-function foaieCurenta(){ return store.sheets.find(s=>s.id===store.activ) || store.sheets[0]; }
-
-let toastTimeout = null;
-function arataToast(text){
-  const el = $("toast"); el.textContent = text; el.classList.add("vizibil");
-  clearTimeout(toastTimeout); toastTimeout = setTimeout(()=>el.classList.remove("vizibil"), 2200);
-}
-
-/* ---------- anulare / refacere ---------- */
-const undoStack = [], redoStack = [];
-function actualizeazaButoaneUndo(){
-  $("btn-undo").disabled = !undoStack.length;
-  $("btn-redo").disabled = !redoStack.length;
-}
-function pushUndo(){
-  undoStack.push(snap());
-  if(undoStack.length > 60) undoStack.shift();
-  redoStack.length = 0;
-  actualizeazaButoaneUndo();
-}
-function restaureaza(text){
-  const o = JSON.parse(text);
-  store = { sheets:o.sheets, activ:o.activ };
-  normalizeazaStore();
-  const s = foaieCurenta();
-  sel.col = Math.min(sel.col, s.cols-1); sel.row = Math.min(sel.row, s.rows-1);
-  salveaza(); randareTot(); actualizeazaButoaneUndo();
-}
-function undo(){
-  if(!undoStack.length) return;
-  redoStack.push(snap());
-  restaureaza(undoStack.pop());
-  arataToast("↶ Anulat");
-}
-function redo(){
-  if(!redoStack.length) return;
-  undoStack.push(snap());
-  restaureaza(redoStack.pop());
-  arataToast("↷ Refăcut");
-}
-
-/* ---------- formatare ---------- */
-const BG = {
-  g:"rgba(46,125,97,.30)", a:"rgba(66,133,244,.28)", y:"rgba(251,188,5,.38)",
-  r:"rgba(234,67,53,.28)", p:"rgba(171,71,188,.28)", x:"rgba(128,128,128,.28)"
-};
-function escHtml(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
-function formatVal(v, f){
-  if(typeof v === "boolean") return v ? "ADEVĂRAT" : "FALS";
-  if(typeof v === "number"){
-    let s;
-    if(f && f.nf){
-      const d = f.dec == null ? 2 : f.dec;
-      s = v.toLocaleString("ro-RO", {minimumFractionDigits:d, maximumFractionDigits:d});
-    } else {
-      s = v.toLocaleString("ro-RO", {maximumFractionDigits:2, useGrouping:false});
-    }
-    s = s.replace(/^[-−](0(?:,0+)?)$/, "$1");
-    return (f && f.nf === "lei") ? s+" lei" : s;
-  }
-  return v == null ? "" : String(v);
-}
-
-/* ---------- randare tab-uri foi ---------- */
-function randareTabsFoi(){
-  const cont = $("tabs-foi");
-  cont.innerHTML = "";
-  store.sheets.forEach(s=>{
-    const b = document.createElement("button");
-    b.className = "tab-foaie" + (s.id===store.activ ? " on":"");
-    b.textContent = s.nume;
-    b.addEventListener("click", ()=>{ store.activ = s.id; sel={col:0,row:0}; salveaza(); randareTot(); });
-    cont.appendChild(b);
-  });
-  const add = document.createElement("button");
-  add.className = "tab-foaie-add"; add.textContent = "＋"; add.setAttribute("aria-label","Foaie nouă");
-  add.addEventListener("click", ()=>{
-    pushUndo();
-    const s = foaieNoua("Foaie "+(store.sheets.length+1));
-    store.sheets.push(s); store.activ = s.id; sel={col:0,row:0};
-    salveaza(); randareTot();
-  });
-  cont.appendChild(add);
-}
-
-/* ---------- randare grilă ---------- */
-let editand = false;   // true după prima tastă într-o celulă (un singur pas de anulare per editare)
-function randareGrid(){
-  const sheet = foaieCurenta();
-  recomputeSheet(sheet);
-  const grid = $("grid");
-  let html = "<thead><tr><th class=\"corner\"></th>";
-  for(let c=0;c<sheet.cols;c++) html += `<th class="col-head" data-colh="${c}">${colLetter(c)}</th>`;
-  html += `<th class="add-rc" data-addcol="1" style="width:40px;min-width:40px;">+</th></tr></thead><tbody>`;
-  for(let r=0;r<sheet.rows;r++){
-    html += `<tr><th class="row-head" data-rowh="${r}">${r+1}</th>`;
-    for(let c=0;c<sheet.cols;c++){
-      const ref = cellRef(c,r);
-      const val = sheet.values[ref];
-      const f = sheet.fmt[ref] || null;
-      const isErr = esteEroare(val);
-      const isNum = typeof val === "number";
-      const isSel = sel.col===c && sel.row===r;
-      const bg = f && f.bg && BG[f.bg] ? ` style="--cbg:${BG[f.bg]}"` : "";
-      html += `<td class="cell${isSel?" sel":""}" data-col="${c}" data-row="${r}"${bg}><div class="cell-val${isNum?" num":""}${isErr?" err":""}${f&&f.b?" b":""}">${escHtml(formatVal(val,f))}</div></td>`;
-    }
-    html += `</tr>`;
-  }
-  html += `<tr><th class="add-rc" data-addrow="1">+</th>`;
-  for(let c=0;c<sheet.cols;c++) html += `<td></td>`;
-  html += `<td></td></tr>`;
-  html += "</tbody>";
-  grid.innerHTML = html;
-  randareFormulaBar();
-}
-function randareFormulaBar(){
-  const sheet = foaieCurenta();
-  editand = false;
-  $("fx-ref").textContent = cellRef(sel.col, sel.row);
-  const raw = sheet.data[cellRef(sel.col, sel.row)];
-  $("fx-input").value = raw==null ? "" : String(raw);
-}
-function randareTot(){ randareTabsFoi(); randareGrid(); actualizeazaButoaneUndo(); }
-
-/* ---------- selecție & editare (totul prin bara de formule) ---------- */
-function selecteazaCelula(c,r, selecteazaTot){
-  sel = {col:c, row:r};
-  randareGrid();
-  const input = $("fx-input");
-  input.focus();
-  if(selecteazaTot) input.select();
-}
-function mutaSelectie(dc,dr){
-  const sheet = foaieCurenta();
-  sel.col = Math.max(0, Math.min(sheet.cols-1, sel.col+dc));
-  sel.row = Math.max(0, Math.min(sheet.rows-1, sel.row+dr));
-  randareGrid();
-  $("fx-input").focus();
-  $("fx-input").select();
-}
-
-// fiecare tastă se salvează imediat: nu se pierde nimic dacă pleci din celulă fără Enter
-$("fx-input").addEventListener("input", ()=>{
-  const sheet = foaieCurenta();
-  const ref = cellRef(sel.col, sel.row);
-  if(!editand){ pushUndo(); editand = true; }
-  const v = $("fx-input").value;
-  if(v === "") delete sheet.data[ref]; else sheet.data[ref] = v;
-  salveazaIntarziat();
-});
-$("fx-input").addEventListener("keydown",(e)=>{
-  if(e.key === "Enter"){ e.preventDefault(); mutaSelectie(0,1); }
-});
-
-$("grid-wrap").addEventListener("click",(e)=>{
-  const addcol = e.target.closest("[data-addcol]");
-  if(addcol){ pushUndo(); const s=foaieCurenta(); s.cols++; salveaza(); randareGrid(); return; }
-  const addrow = e.target.closest("[data-addrow]");
-  if(addrow){ pushUndo(); const s=foaieCurenta(); s.rows++; salveaza(); randareGrid(); return; }
-  const colh = e.target.closest("[data-colh]");
-  if(colh){
-    const c = +colh.dataset.colh;
-    const s = foaieCurenta();
-    if(s.cols <= 1) return;
-    if(!confirm(`Ștergi coloana ${colLetter(c)}?`)) return;
-    pushUndo(); stergeColoana(s,c); salveaza(); randareGrid(); return;
-  }
-  const rowh = e.target.closest("[data-rowh]");
-  if(rowh){
-    const r = +rowh.dataset.rowh;
-    const s = foaieCurenta();
-    if(s.rows <= 1) return;
-    if(!confirm(`Ștergi rândul ${r+1}?`)) return;
-    pushUndo(); stergeRand(s,r); salveaza(); randareGrid(); return;
-  }
-  const td = e.target.closest("td.cell");
-  if(td){ selecteazaCelula(+td.dataset.col, +td.dataset.row, true); }
-});
-function stergeAxa(s, axis, idx){
-  const date = {}, fmt = {};
-  const mapRef = (p)=>{
-    const v = axis==="col" ? p.col : p.row;
-    if(v === idx) return null;
-    const nv = v > idx ? v-1 : v;
-    return axis==="col" ? cellRef(nv,p.row) : cellRef(p.col,nv);
-  };
-  Object.keys(s.data).forEach(ref=>{
-    const nr = mapRef(parseRef(ref)); if(!nr) return;
-    let v = s.data[ref];
-    if(typeof v === "string" && v.trim().startsWith("=")) v = shiftRefs(v, axis, idx);
-    date[nr] = v;
-  });
-  Object.keys(s.fmt).forEach(ref=>{
-    const nr = mapRef(parseRef(ref)); if(nr) fmt[nr] = s.fmt[ref];
-  });
-  s.data = date; s.fmt = fmt;
-}
-function stergeColoana(s,c){
-  stergeAxa(s,"col",c); s.cols--;
-  if(sel.col >= s.cols) sel.col = s.cols-1;
-}
-function stergeRand(s,r){
-  stergeAxa(s,"row",r); s.rows--;
-  if(sel.row >= s.rows) sel.row = s.rows-1;
-}
-
-/* ---------- anulare / refacere (butoane) ---------- */
-$("btn-undo").addEventListener("click", undo);
-$("btn-redo").addEventListener("click", redo);
-
-/* ---------- meniu foaie (redenumește / duplică / exportă / șterge) ---------- */
-$("btn-meniu-foaie").addEventListener("click", ()=>{
-  $("input-nume-foaie").value = foaieCurenta().nume;
-  $("overlay-foaie").classList.add("deschis");
-});
-$("btn-inchide-meniu").addEventListener("click", ()=>$("overlay-foaie").classList.remove("deschis"));
-$("btn-redenumeste").addEventListener("click", ()=>{
-  const nume = $("input-nume-foaie").value.trim();
-  if(nume && nume !== foaieCurenta().nume){ pushUndo(); foaieCurenta().nume = nume; salveaza(); randareTabsFoi(); }
-  $("overlay-foaie").classList.remove("deschis");
-});
-$("btn-duplica").addEventListener("click", ()=>{
-  pushUndo();
-  const s = foaieCurenta();
-  const copie = { id:idNou(), nume:s.nume+" (copie)", cols:s.cols, rows:s.rows,
-    data:JSON.parse(JSON.stringify(s.data)), fmt:JSON.parse(JSON.stringify(s.fmt)) };
-  store.sheets.push(copie); store.activ = copie.id;
-  salveaza(); $("overlay-foaie").classList.remove("deschis"); randareTot();
-});
-$("btn-sterge-foaie").addEventListener("click", ()=>{
-  if(store.sheets.length <= 1){ alert("Trebuie să rămână cel puțin o foaie."); return; }
-  if(!confirm(`Ștergi foaia "${foaieCurenta().nume}"? Poți anula cu ↶.`)) return;
-  pushUndo();
-  store.sheets = store.sheets.filter(s=>s.id !== store.activ);
-  store.activ = store.sheets[0].id; sel={col:0,row:0};
-  salveaza(); $("overlay-foaie").classList.remove("deschis"); randareTot();
-});
-
-/* ---------- export CSV ---------- */
-function textCsv(v){
-  if(v == null) return "";
-  if(typeof v === "boolean") return v ? "ADEVĂRAT" : "FALS";
-  if(typeof v === "number") return String(parseFloat(v.toPrecision(12))).replace(".",",");
-  const s = String(v);
-  return /[;"\n\r]/.test(s) ? '"'+s.replace(/"/g,'""')+'"' : s;
-}
-// separator ";" și zecimale cu virgulă: se deschide direct în Excel cu setări românești
-function construiesteCsv(sheet){
-  recomputeSheet(sheet);
-  let maxC = -1, maxR = -1;
-  Object.keys(sheet.data).forEach(ref=>{
-    const p = parseRef(ref);
-    if(p.col > maxC) maxC = p.col;
-    if(p.row > maxR) maxR = p.row;
-  });
-  if(maxC < 0) return null;
-  const linii = [];
-  for(let r=0;r<=maxR;r++){
-    const celule = [];
-    for(let c=0;c<=maxC;c++) celule.push(textCsv(sheet.values[cellRef(c,r)]));
-    linii.push(celule.join(";"));
-  }
-  return linii.join("\r\n");
-}
-function numeFisier(nume){
-  const s = nume.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^\w\- ]+/g,"").trim().replace(/\s+/g,"_");
-  return (s || "tabel") + ".csv";
-}
-async function exportaCsv(){
-  const sheet = foaieCurenta();
-  const csv = construiesteCsv(sheet);
-  if(csv === null){ arataToast("Foaia e goală — nu am ce exporta."); return; }
-  const blob = new Blob(["\uFEFF"+csv], {type:"text/csv;charset=utf-8"});
-  const nume = numeFisier(sheet.nume);
-  try{
-    const file = new File([blob], nume, {type:"text/csv"});
-    if(navigator.canShare && navigator.canShare({files:[file]})){
-      await navigator.share({files:[file], title:sheet.nume});
-      return;
-    }
-  }catch(e){ if(e && e.name === "AbortError") return; }
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url; a.download = nume; document.body.appendChild(a); a.click(); a.remove();
-  setTimeout(()=>URL.revokeObjectURL(url), 4000);
-  arataToast("✓ "+nume+" descărcat");
-}
-$("btn-export-csv").addEventListener("click", ()=>{
-  $("overlay-foaie").classList.remove("deschis");
-  exportaCsv();
-});
-
-/* ---------- formatare celule (fereastra „Aa”) ---------- */
-let scopFmt = "cel";
-function refsScop(sheet){
-  const out = [];
-  if(scopFmt === "rand"){ for(let c=0;c<sheet.cols;c++) out.push(cellRef(c, sel.row)); }
-  else if(scopFmt === "col"){ for(let r=0;r<sheet.rows;r++) out.push(cellRef(sel.col, r)); }
-  else out.push(cellRef(sel.col, sel.row));
-  return out;
-}
-function fmtCurent(){ return foaieCurenta().fmt[cellRef(sel.col, sel.row)] || {}; }
-function aplicaFmt(mut){
-  const sheet = foaieCurenta();
-  pushUndo();
-  refsScop(sheet).forEach(ref=>{
-    const f = Object.assign({}, sheet.fmt[ref]);
-    mut(f);
-    Object.keys(f).forEach(k=>{ if(f[k]===undefined || f[k]==="" || f[k]===false) delete f[k]; });
-    if(Object.keys(f).length) sheet.fmt[ref] = f; else delete sheet.fmt[ref];
-  });
-  salveaza(); randareGrid(); randareFormat();
-}
-function randareFormat(){
-  const f = fmtCurent();
-  $("fmt-ref").textContent = cellRef(sel.col, sel.row);
-  document.querySelectorAll("#seg-scop button").forEach(b=>b.classList.toggle("on", b.dataset.scop===scopFmt));
-  $("fmt-bold").classList.toggle("on", !!f.b);
-  document.querySelectorAll("#seg-nf button").forEach(b=>b.classList.toggle("on", b.dataset.nf === (f.nf||"auto")));
-  $("dec-val").textContent = f.nf ? (f.dec == null ? 2 : f.dec) : "auto";
-  document.querySelectorAll("#swatches button").forEach(b=>b.classList.toggle("on", b.dataset.bg === (f.bg||"")));
-}
-(function construiesteSwatches(){
-  const cont = $("swatches");
-  const mk = (cod, css, aria)=>{
-    const b = document.createElement("button");
-    b.dataset.bg = cod; b.setAttribute("aria-label", aria);
-    if(css) b.style.setProperty("--sw", css); else { b.className = "sw-none"; b.textContent = "✕"; }
-    cont.appendChild(b);
-  };
-  mk("", null, "Fără culoare");
-  [["g","verde"],["a","albastru"],["y","galben"],["r","roșu"],["p","mov"],["x","gri"]].forEach(([k,n])=>mk(k, BG[k], n));
-})();
-$("btn-format").addEventListener("click", ()=>{
-  $("fx-input").blur();
-  scopFmt = "cel";
-  randareFormat();
-  $("overlay-format").classList.add("deschis");
-});
-$("btn-inchide-format").addEventListener("click", ()=>$("overlay-format").classList.remove("deschis"));
-$("seg-scop").addEventListener("click", (e)=>{
-  const b = e.target.closest("button"); if(!b) return;
-  scopFmt = b.dataset.scop; randareFormat();
-});
-$("fmt-bold").addEventListener("click", ()=>{
-  const nou = !fmtCurent().b;
-  aplicaFmt(f=>{ f.b = nou ? 1 : undefined; });
-});
-$("seg-nf").addEventListener("click", (e)=>{
-  const b = e.target.closest("button"); if(!b) return;
-  const v = b.dataset.nf;
-  aplicaFmt(f=>{
-    if(v === "auto"){ f.nf = undefined; f.dec = undefined; }
-    else { f.nf = v; if(f.dec == null) f.dec = 2; }
-  });
-});
-function schimbaZecimale(delta){
-  const cur = fmtCurent();
-  const nou = Math.max(0, Math.min(4, (cur.dec == null ? 2 : cur.dec) + delta));
-  aplicaFmt(f=>{ if(!f.nf) f.nf = "num"; f.dec = nou; });
-}
-$("dec-minus").addEventListener("click", ()=>schimbaZecimale(-1));
-$("dec-plus").addEventListener("click", ()=>schimbaZecimale(1));
-$("swatches").addEventListener("click", (e)=>{
-  const b = e.target.closest("button"); if(!b) return;
-  const v = b.dataset.bg;
-  aplicaFmt(f=>{ f.bg = v || undefined; });
-});
-
-/* ---------- import din Revânzări ---------- */
-$("btn-import").addEventListener("click", ()=>$("overlay-import").classList.add("deschis"));
-$("btn-anuleaza-import").addEventListener("click", ()=>$("overlay-import").classList.remove("deschis"));
-$("btn-confirma-import").addEventListener("click", ()=>{
-  $("overlay-import").classList.remove("deschis");
-  let produse = null;
-  try{
-    const raw = localStorage.getItem("revanzari-date");
-    if(raw){ const parsat = JSON.parse(raw); produse = parsat.produse || null; }
-  }catch(e){}
-  if(!produse || !produse.length){
-    arataToast("Nu am găsit date de la Revânzări pe acest site.");
-    return;
-  }
-  pushUndo();
-  const s = foaieNoua("Produse Revânzări");
-  s.cols = 6; s.rows = Math.max(20, produse.length+3);
-  s.data["A1"]="Produs"; s.data["B1"]="Achiziție"; s.data["C1"]="Vânzare"; s.data["D1"]="Bucăți"; s.data["E1"]="Stoc"; s.data["F1"]="Profit";
-  produse.forEach((p,i)=>{
-    const r = i+2;
-    s.data["A"+r] = p.nume || "Produs";
-    s.data["B"+r] = String(p.pretAchizitie ?? 0);
-    s.data["C"+r] = String(p.pretVanzare ?? 0);
-    s.data["D"+r] = String(p.cantitate ?? 1);
-    s.data["E"+r] = String(p.stoc ?? 0);
-    s.data["F"+r] = `=(C${r}-B${r})*D${r}`;
-  });
-  const ultim = produse.length+2;
-  s.data["A"+(ultim+1)] = "Total profit";
-  s.data["F"+(ultim+1)] = `=SUM(F2:F${ultim})`;
-  // aspect: antet aldin cu fundal verde, prețurile și profitul în lei
-  ["A","B","C","D","E","F"].forEach(l=>{ s.fmt[l+"1"] = { b:1, bg:"g" }; });
-  for(let r=2;r<=ultim+1;r++){ ["B","C","F"].forEach(l=>{ if(r<=ultim || l==="F") s.fmt[l+r] = { nf:"lei", dec:2 }; }); }
-  s.fmt["A"+(ultim+1)] = { b:1 };
-  s.fmt["F"+(ultim+1)] = { b:1, nf:"lei", dec:2 };
-  store.sheets.push(s); store.activ = s.id; sel = {col:0,row:0};
-  salveaza(); randareTot();
-  arataToast(`✓ Importate ${produse.length} produse`);
-});
-
-/* ---------- ghid formule ---------- */
-$("btn-ghid").addEventListener("click", ()=>$("overlay-ghid").classList.add("deschis"));
-$("btn-inchide-ghid").addEventListener("click", ()=>$("overlay-ghid").classList.remove("deschis"));
-
-/* ---------- salvare la ieșire din aplicație ---------- */
-document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState === "hidden") salveaza(); });
-window.addEventListener("pagehide", salveaza);
-
-if("serviceWorker" in navigator){
-  window.addEventListener("load", ()=>{ navigator.serviceWorker.register("./sw.js").catch(()=>{}); });
-}
-
-incarca();
-randareTot();
+function calcT(P){var bmr=10*P.w+6.25*P.h-5*P.a+(P.s==="m"?5:-161),k=Math.max(1200,Math.round((bmr*P.x+P.g)/10)*10),pk=P.g<0?2:(P.g>0?1.8:1.6),p=Math.round(pk*P.w),f=Math.round(k*.25/9),c=Math.max(0,Math.round((k-4*p-9*f)/4));return{k:k,p:p,c:c,f:f}}
+function setGoal(val){var P=S.prof||{s:"m",a:30,h:175,w:75,x:1.4,g:val};P.g=val;S.prof=P;
+ if(P.ok){var T=calcT(P);S.goal=T.k;S.mt=[T.p,T.c,T.f];save();render()}else{save();S.tab="calc";render()}}
+function weekDone(){var n=0,t=0;for(var d=0;d<7;d++){var L=list(d);if(!L.length)continue;t++;if(L.every(function(x,i){return S.done[key(d,x,i)]}))n++}return[n,t]}
+function trend(){var B=S.bw;if(B.length<2)return null;function pd(d){var a=d.split("-");return new Date(+a[0],+a[1]-1,+a[2]).getTime()}
+ var l=B[B.length-1],lt=pd(l.d),ref=null;for(var i=B.length-2;i>=0;i--){if(lt-pd(B[i].d)>=6*864e5){ref=B[i];break}}
+ if(!ref)return null;return(l.k-ref.k)/((lt-pd(ref.d))/(7*864e5))}
+function exportData(){var d=new Date(),n="fitplan-copie-"+d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate()+".json",txt=JSON.stringify(snap());
+ function done(){S.lb=today();save();render()}
+ try{var f=new File([txt],n,{type:"application/json"});
+  if(navigator.canShare&&navigator.canShare({files:[f]})){navigator.share({files:[f],title:"Copie FitPlan"}).then(done).catch(function(){});return}}catch(e){}
+ try{var u=URL.createObjectURL(new Blob([txt],{type:"application/json"})),a=document.createElement("a");a.href=u;a.download=n;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(u)},4000);done()}catch(e){alert("Nu am putut salva fișierul.")}}
+function importData(){var i=document.createElement("input");i.type="file";i.accept=".json,application/json";
+ i.onchange=function(){var f=i.files&&i.files[0];if(!f)return;var r=new FileReader();r.onload=function(){try{var d=JSON.parse(r.result);if(!d||typeof d!=="object"||!d.food||!d.done)throw 0;
+  if(!confirm("Înlocuiești datele de acum cu cele din copie?"))return;
+  ["plan","done","extra","goal","theme","w","bw","recent","fav","prof","mt","food","lb"].forEach(function(k){if(d[k]!==undefined)S[k]=d[k]});save();applyTheme();S.tab="azi";render()}catch(e){alert("Fișierul nu pare o copie FitPlan.")}};r.readAsText(f)};i.click()}
+function vRaport(v){
+ v.appendChild($("<h1>Ultimele 7 zile</h1>"));v.appendChild(document.createElement("br"));
+ var D=[],i;for(i=6;i>=0;i--){var d=new Date();d.setDate(d.getDate()-i);var k=d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate(),L=S.food[k]||[];
+  D.push({l:Z[(d.getDay()+6)%7],k:L.reduce(function(a,f){return a+f.k},0),p:L.reduce(function(a,f){return a+(f.p||0)},0),n:L.length})}
+ var lg=D.filter(function(x){return x.n>0}),av=function(f){return lg.length?Math.round(lg.reduce(function(a,x){return a+x[f]},0)/lg.length):0};
+ var mx=Math.max(S.goal*1.2,Math.max.apply(null,D.map(function(x){return x.k}))),bars="";
+ D.forEach(function(x,j){var h=x.k/mx*90,y=100-h,c=x.k>S.goal*1.1?"var(--bad)":"var(--acc)";
+  bars+='<rect x="'+(j*42+8)+'" y="'+y.toFixed(1)+'" width="28" height="'+Math.max(h,x.k?2:0).toFixed(1)+'" rx="6" fill="'+c+'"/><text x="'+(j*42+22)+'" y="116" text-anchor="middle" font-size="12" fill="var(--mute)">'+x.l+'</text>'});
+ var gy=(100-S.goal/mx*90).toFixed(1);
+ var c1=$('<div class="card"><b>Kcal pe zi</b><svg viewBox="0 0 300 122" width="100%" role="img" aria-label="Grafic kcal pe ultimele 7 zile" style="margin-top:8px">'+bars+'<line x1="0" x2="300" y1="'+gy+'" y2="'+gy+'" stroke="var(--ok)" stroke-width="2" stroke-dasharray="5 4"/></svg><div class="mute">Linia verde = obiectivul de '+S.goal+' kcal</div></div>');
+ v.appendChild(c1);
+ var T3=S.mt?S.mt[0]:null,wd=weekDone(),B=S.bw,wt="Nicio cântărire încă";
+ if(B.length){wt=B[B.length-1].k+" kg";var tr=trend();if(tr!==null)wt+=" ("+(tr>0?"+":"")+tr.toFixed(1)+" kg/săpt)"}
+ var st=$('<div class="card"><div class="row"><span class="sp">Zile cu mâncare notată</span><b>'+lg.length+' din 7</b></div><div class="row" style="margin-top:8px"><span class="sp">Medie kcal pe zi notată</span><b>'+av("k")+'</b></div><div class="row" style="margin-top:8px"><span class="sp">Medie proteine</span><b>'+av("p")+' g'+(T3?' / '+T3:'')+'</b></div><div class="row" style="margin-top:8px"><span class="sp">Antrenamente complete</span><b>'+wd[0]+' din '+wd[1]+'</b></div><div class="row" style="margin-top:8px"><span class="sp">Greutate</span><b>'+wt+'</b></div></div>');
+ v.appendChild(st);
+ var b=$('<button class="btn alt" style="width:100%">Înapoi la Azi</button>');b.onclick=function(){S.tab="azi";render()};v.appendChild(b)}
+function vCalc(v){
+ var P=S.prof||{s:"m",a:30,h:175,w:75,x:1.4,g:0};
+ v.appendChild($("<h1>Obiectiv zilnic</h1>"));
+ var f=$('<div class="card" style="margin-top:14px"><div class="grid2" style="grid-template-columns:1fr 1fr"><select id="s" aria-label="Sex"><option value="m">Bărbat</option><option value="f">Femeie</option></select><input type="number" id="a" placeholder="Vârstă" aria-label="Vârstă"><input type="number" id="h" placeholder="Înălțime cm" aria-label="Înălțime"><input type="number" id="w" step="0.1" placeholder="Greutate kg" aria-label="Greutate"></div><div class="grid2" style="grid-template-columns:1fr"><select id="x" aria-label="Activitate"><option value="1.2">Sedentar</option><option value="1.375">Ușor activ, 1-3 antrenamente</option><option value="1.55">Moderat, 3-5 antrenamente</option><option value="1.725">Foarte activ, 6-7 antrenamente</option></select><select id="g" aria-label="Scop"><option value="-500">Slăbit</option><option value="0">Menținere</option><option value="300">Masă musculară</option></select></div><button class="btn" id="ok" style="width:100%;margin-top:12px">Calculează și salvează</button><div id="res" style="margin-top:12px"></div></div>');
+ var q=function(i){return f.querySelector("#"+i)};
+ q("s").value=P.s;q("a").value=P.a;q("h").value=P.h;q("w").value=P.w;q("x").value=String(P.x);q("g").value=String(P.g);
+ q("ok").onclick=function(){var a=+q("a").value,h=+q("h").value,w=+q("w").value;if(!(a>9&&h>100&&w>20)){q("res").innerHTML='<span class="mute">Completează vârsta, înălțimea și greutatea.</span>';return}
+  var sx=q("s").value,x=+q("x").value,g=+q("g").value;S.prof={s:sx,a:a,h:h,w:w,x:x,g:g,ok:1};
+  var T=calcT({s:sx,a:a,h:h,w:w,x:x,g:g}),k=T.k,p=T.p,fa=T.f,c=T.c;
+  S.goal=k;S.mt=[p,c,fa];save();
+  q("res").innerHTML='<div class="big">'+k+' <small class="mute" style="font-size:16px">kcal pe zi</small></div><p>Proteine '+p+' g · Carbohidrați '+c+' g · Grăsimi '+fa+' g</p><p class="mute">Estimare orientativă, calculată cu formula Mifflin-St Jeor. Ajusteaz-o după cum evoluează greutatea.</p>'};
+ v.appendChild(f);
+ var b=$('<button class="btn alt" style="width:100%">Înapoi la Azi</button>');b.onclick=function(){S.tab="azi";render()};v.appendChild(b)}
+var IMGBASE="https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/";
+function showEx(name){var I=IMG[name];if(!I)return;
+ var ov=$('<div style="position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9;display:flex;align-items:flex-end"><div class="card" style="width:100%;max-width:560px;margin:0 auto;border-radius:18px 18px 0 0;padding-bottom:calc(16px + env(safe-area-inset-bottom))"><div class="row"><b class="sp" id="xn" style="font-size:20px"></b><button class="x" id="xc" aria-label="Închide">×</button></div><div style="background:#fff;border-radius:12px;margin-top:10px;min-height:120px;display:flex;align-items:center;justify-content:center;overflow:hidden"><img id="xi" alt="" style="width:100%;max-height:300px;object-fit:contain"></div><div class="mute" id="xm" style="margin-top:10px"></div><div class="mute" style="font-size:12px;margin-top:8px">Imagini: Free Exercise DB, domeniu public. Au nevoie de internet.</div></div></div>');
+ var im=ov.querySelector("#xi"),k=0,iv=null;
+ ov.querySelector("#xn").textContent=name;
+ ov.querySelector("#xm").textContent="Lucrează: "+I[2]+(I[3]?". Ajută: "+I[3]+".":".");
+ function setI(){im.src=IMGBASE+I[0]+"/"+k+".jpg"}
+ im.onerror=function(){ov.querySelector("#xm").textContent="Nu pot încărca imaginea. Verifică internetul."};
+ setI();if(I[1]>1)iv=setInterval(function(){k=(k+1)%I[1];setI()},1000);
+ function close(){clearInterval(iv);ov.remove()}
+ ov.querySelector("#xc").onclick=close;ov.onclick=function(e){if(e.target===ov)close()};
+ document.body.appendChild(ov)}
+function editFood(f){
+ var ov=$('<div style="position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9;display:flex;align-items:flex-end"><div class="card" style="width:100%;max-width:560px;margin:0 auto;border-radius:16px 16px 0 0;padding-bottom:calc(14px + env(safe-area-inset-bottom))"><b>Modifică alimentul</b><div class="grid2" style="grid-template-columns:1fr"><input type="text" id="en" maxlength="40" aria-label="Nume"><select id="em" aria-label="Masa"></select></div><div class="grid2" style="grid-template-columns:1fr 1fr 1fr 1fr"><label class="mute">kcal<input type="number" id="ek"></label><label class="mute">Prot.<input type="number" id="ep" step="0.1"></label><label class="mute">Carbo<input type="number" id="ec" step="0.1"></label><label class="mute">Grăs.<input type="number" id="ef" step="0.1"></label></div><div class="row" style="margin-top:10px"><span class="mute sp">Schimbă porția</span><button class="btn alt" data-x="0.5">×½</button><button class="btn alt" data-x="1.5">×1,5</button><button class="btn alt" data-x="2">×2</button></div><div class="row" style="margin-top:12px"><button class="btn" id="sv" style="flex:1">Salvează</button><button class="btn alt" id="dl">Șterge</button><button class="btn alt" id="cl">Închide</button></div></div></div>');
+ var q=function(i){return ov.querySelector("#"+i)};
+ MEALS.forEach(function(m,i){var o=document.createElement("option");o.value=i;o.textContent=m;q("em").appendChild(o)});
+ q("en").value=f.n;q("em").value=f.m;q("ek").value=f.k;q("ep").value=f.p||0;q("ec").value=f.c||0;q("ef").value=f.f||0;
+ ov.querySelectorAll("[data-x]").forEach(function(b){b.onclick=function(){var x=+b.dataset.x;["ek","ep","ec","ef"].forEach(function(i){q(i).value=Math.round(q(i).value*x*10)/10})}});
+ q("cl").onclick=function(){ov.remove()};
+ q("dl").onclick=function(){var l=S.food[today()]||[],i=l.indexOf(f);if(i>=0)l.splice(i,1);save();ov.remove();render()};
+ q("sv").onclick=function(){var k=+q("ek").value;if(!(k>=0))return;f.n=q("en").value.trim()||f.n;f.m=+q("em").value;f.k=Math.round(k);f.p=+q("ep").value||0;f.c=+q("ec").value||0;f.f=+q("ef").value||0;save();ov.remove();render()};
+ document.body.appendChild(ov)}
+var DK=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches;
+function applyTheme(){document.documentElement.setAttribute("data-t",S.theme||(DK?"noapte":"ocean"))}
+function themePicker(){var b=document.getElementById("thm"),pp=document.getElementById("thp");
+ var TH=[["ocean","#1d6fe8","Ocean"],["padure","#1f9d55","Pădure"],["apus","#d6336c","Apus"],["noapte","#17233b","Noapte"]];
+ function fill(){pp.innerHTML="";var cur=S.theme||(DK?"noapte":"ocean");TH.forEach(function(t){var x=document.createElement("button");x.className="th"+(cur===t[0]?" on":"");x.setAttribute("aria-label","Tema "+t[2]);x.style.background=t[1];x.onclick=function(){S.theme=t[0];save();applyTheme();pp.hidden=true};pp.appendChild(x)})}
+ b.onclick=function(e){e.stopPropagation();fill();pp.hidden=!pp.hidden};
+ document.addEventListener("click",function(e){if(!pp.contains(e.target))pp.hidden=true})}
+function render(){nav();var v=document.getElementById("v");v.innerHTML="";({raport:vRaport,calc:vCalc,azi:vAzi,mancare:vMancare,sport:vSport,timer:vTimer})[S.tab](v);window.scrollTo(0,0)}
+applyTheme();themePicker();render();
+if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(function(){});
 </script>
 </body>
 </html>
